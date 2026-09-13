@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: Vempain/vempain-workflows/.github/workflows/spring-boot-service.yaml@main
+    with:
+      install_exiftool: true
+      run_test_setup: true
+    secrets: inherit
