@@ -1,18 +1,32 @@
 package fi.poltsi.vempain.website.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.http.MediaType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * REST contract for website pages and directories.
+ */
 @Tag(name = "Pages", description = "Website page and directory endpoints")
 public interface PageApi {
+	/** Base path for page endpoints. */
 	String BASE_PATH = "/api";
 
+	/**
+	 * Lists pages using the supplied filters.
+	 *
+	 * @param page zero-based page number
+	 * @param size requested page size
+	 * @param sort sort direction
+	 * @param search optional search text
+	 * @param path optional path filter
+	 * @return matching pages
+	 */
 	@GetMapping(path = BASE_PATH + "/pages", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List pages")
 	@ApiResponses({
@@ -24,6 +38,12 @@ public interface PageApi {
 	             @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") String search,
 	             @RequestParam(required = false) String path);
 
+	/**
+	 * Returns a page by identifier.
+	 *
+	 * @param id page identifier
+	 * @return page data
+	 */
 	@GetMapping(path = BASE_PATH + "/pages/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get a page by ID")
 	@ApiResponses({
@@ -34,6 +54,16 @@ public interface PageApi {
 	})
 	Object page(@PathVariable long id);
 
+	/**
+	 * Lists public pages using the supplied filters.
+	 *
+	 * @param page zero-based page number
+	 * @param size requested page size
+	 * @param sort sort direction
+	 * @param search optional search text
+	 * @param path optional path filter
+	 * @return matching public pages
+	 */
 	@GetMapping(path = BASE_PATH + "/public/pages", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List public pages")
 	@ApiResponses({
@@ -45,6 +75,12 @@ public interface PageApi {
 	                   @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") String search,
 	                   @RequestParam(required = false) String path);
 
+	/**
+	 * Lists the children of a page.
+	 *
+	 * @param parentId parent page identifier
+	 * @return child pages
+	 */
 	@GetMapping(path = BASE_PATH + "/public/pages/{parentId}/children", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List child pages")
 	@ApiResponses({
@@ -54,6 +90,11 @@ public interface PageApi {
 	})
 	Object children(@PathVariable long parentId);
 
+	/**
+	 * Lists available page directories.
+	 *
+	 * @return page directories
+	 */
 	@GetMapping(path = BASE_PATH + "/public/page-directories", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List page directories")
 	@ApiResponses({
@@ -62,6 +103,12 @@ public interface PageApi {
 	})
 	Object directories();
 
+	/**
+	 * Returns a page directory tree.
+	 *
+	 * @param directory directory name
+	 * @return directory tree
+	 */
 	@GetMapping(path = BASE_PATH + "/public/page-directories/{directory}/tree", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get a page directory tree")
 	@ApiResponses({
@@ -72,6 +119,12 @@ public interface PageApi {
 	})
 	Object tree(@PathVariable String directory);
 
+	/**
+	 * Returns page content by file path.
+	 *
+	 * @param path page content file path
+	 * @return page content
+	 */
 	@GetMapping(path = BASE_PATH + "/public/page-content", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get page content by file path")
 	@ApiResponses({

@@ -1,14 +1,30 @@
 plugins {
     id 'java-library'
+	id 'maven-publish'
 }
 
 description = 'Vempain Website REST API contracts and DTOs'
 
 group = 'fi.poltsi.vempain'
 version = project.hasProperty("releaseVersion") ? project.releaseVersion : '0.0.1-SNAPSHOT'
+def apiArtifactName = "${rootProject.name}-api"
 
 jar {
-	archiveFileName = "${rootProject.name}-api-${version}.jar"
+	archiveFileName = "${apiArtifactName}-${version}.jar"
+}
+
+java {
+	// Attach sources and javadoc for Maven consumers
+	withSourcesJar()
+	withJavadocJar()
+}
+
+tasks.named('sourcesJar') {
+	archiveFileName = "${apiArtifactName}-${version}-sources.jar"
+}
+
+tasks.named('javadocJar') {
+	archiveFileName = "${apiArtifactName}-${version}-javadoc.jar"
 }
 
 dependencies {
@@ -16,6 +32,43 @@ dependencies {
     api 'jakarta.servlet:jakarta.servlet-api'
     api 'com.fasterxml.jackson.core:jackson-annotations'
     api "io.swagger.core.v3:swagger-annotations:${swaggerVersion}"
+}
+
+// Publish the API module to GitHub Packages when invoked by CI
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+			// Optional: keep artifactId as project name ('api')
+			groupId = project.group
+			artifactId = apiArtifactName
+			version = project.version
+			pom {
+				name = apiArtifactName
+				description = "Public API (DTOs and interfaces) for Vempain Website backend"
+				url = "https://github.com/Vempain/${rootProject.name}"
+				licenses {
+					license {
+						name = "GPL-2.0 License"
+						url = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
+					}
+				}
+				scm {
+					url = "https://github.com/Vempain/${rootProject.name}"
+				}
+			}
+		}
+	}
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/Vempain/${rootProject.name}")
+			credentials {
+				username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+				password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+			}
+		}
+	}
 }
 
 tasks.named('test') {

@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version "${springBootVersion}"
     id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+	id 'jacoco'
 }
 
 group = 'fi.poltsi.vempain'
@@ -30,6 +31,48 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-postgresql:${testContainersVersion}"
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url = "https://maven.pkg.github.com/Vempain/vempain-auth"
+		credentials {
+			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+			password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+		}
+	}
+	maven {
+		url = "https://maven.pkg.github.com/Vempain/vempain-admin-backend-api"
+		credentials {
+			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+			password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
+		}
+	}
+	maven { url = 'https://repo.spring.io/milestone' }
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn test
+	violationRules {
+		rule {
+			element = 'PACKAGE'
+			includes = ['fi.poltsi.vempain.file.service.files']
+			limit {
+				counter = 'LINE'
+				value = 'COVEREDRATIO'
+				minimum = 0.95
+			}
+		}
+	}
 }
 
 tasks.named('test') {

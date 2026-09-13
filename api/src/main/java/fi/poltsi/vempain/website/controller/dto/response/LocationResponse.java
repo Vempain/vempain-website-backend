@@ -4,6 +4,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 
+/**
+ * GPS location and reverse-geocoded metadata.
+ *
+ * @param id             location identifier
+ * @param latitude       latitude in decimal degrees
+ * @param latitudeRef    latitude hemisphere reference
+ * @param longitude      longitude in decimal degrees
+ * @param longitudeRef   longitude hemisphere reference
+ * @param altitude       altitude in meters
+ * @param direction      direction in degrees
+ * @param satelliteCount number of satellites used
+ * @param country        country name
+ * @param state          state or region
+ * @param city           city name
+ * @param street         street name
+ * @param subLocation    more specific location
+ */
 @Schema(name = "LocationResponse", description = "GPS location and reverse-geocoded metadata")
 public record LocationResponse(
 		@Schema(description = "Location identifier", example = "42")

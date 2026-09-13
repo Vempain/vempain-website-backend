@@ -2,6 +2,12 @@ package fi.poltsi.vempain.website.controller.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+/**
+ * Credentials used to start an authenticated session.
+ *
+ * @param username login username
+ * @param password login password
+ */
 @Schema(name = "LoginRequest", description = "Credentials used to start an authenticated session")
 public record LoginRequest(
 		@Schema(description = "Login username", example = "alice", requiredMode = Schema.RequiredMode.REQUIRED)
