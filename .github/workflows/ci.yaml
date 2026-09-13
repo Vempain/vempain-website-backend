@@ -19,6 +19,6 @@ jobs:
   ci:
     uses: Vempain/vempain-workflows/.github/workflows/spring-boot-service.yaml@main
     with:
-      install_exiftool: true
-      run_test_setup: true
+      install_exiftool: false
+      run_test_setup: false
     secrets: inherit
