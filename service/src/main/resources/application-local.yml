@@ -1,0 +1,3 @@
+logging:
+  level:
+    fi.poltsi.vempain.website: DEBUG

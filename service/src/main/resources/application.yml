@@ -1,0 +1,40 @@
+server:
+  port: 8000
+  # The frontend links to files whose names may contain characters that Tomcat rejects by
+  # default; the PHP built-in server accepted them, so keep the behaviour.
+  tomcat:
+    relaxed-path-chars: "[,]"
+    relaxed-query-chars: "[,]"
+
+spring:
+  application:
+    name: vempain-website-backend
+  datasource:
+    url: jdbc:postgresql://${ENV_VEMPAIN_SITE_DB_HOST:127.0.0.1}:${ENV_VEMPAIN_SITE_DB_PORT:5434}/${ENV_VEMPAIN_SITE_DB_NAME:vempain_site_db}?currentSchema=${ENV_VEMPAIN_SITE_DB_SCHEMA:vempain_site}
+    username: ${ENV_VEMPAIN_SITE_DB_USER:vempain_site}
+    password: ${ENV_VEMPAIN_SITE_DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # The schema is owned by the Vempain admin backend, never modified from here.
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: ${ENV_VEMPAIN_SITE_DB_SCHEMA:vempain_site}
+        jdbc:
+          time_zone: UTC
+  jackson:
+    default-property-inclusion: always
+
+vempain:
+  site:
+    files-root: ${VEMPAIN_WEBSITE_WEB_ROOT:/files}
+    jwt-secret: ${JWT_SECRET:}
+    jwt-ttl-seconds: ${JWT_TTL_SECONDS:1200}
+    jwt-cookie-name: OXALATE_JWT_TOKEN
+    jwt-cookie-secure: ${COOKIE_SECURE:false}
+    cors-allowed-origins: ${ENV_VEMPAIN_CORS_ALLOW_ORIGINS:}
+
+logging:
+  level:
+    fi.poltsi.vempain.website: INFO

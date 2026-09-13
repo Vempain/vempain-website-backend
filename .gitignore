@@ -1,0 +1,7 @@
+target/
+build/
+*.log
+.idea/
+.gradle/
+.june/
+start.sh

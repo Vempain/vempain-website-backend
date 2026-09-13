@@ -1,0 +1,23 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'Vempain Website REST API contracts and DTOs'
+
+group = 'fi.poltsi.vempain'
+version = project.hasProperty("releaseVersion") ? project.releaseVersion : '0.0.1-SNAPSHOT'
+
+jar {
+	archiveFileName = "${rootProject.name}-api-${version}.jar"
+}
+
+dependencies {
+    api 'org.springframework:spring-web'
+    api 'jakarta.servlet:jakarta.servlet-api'
+    api 'com.fasterxml.jackson.core:jackson-annotations'
+    api "io.swagger.core.v3:swagger-annotations:${swaggerVersion}"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

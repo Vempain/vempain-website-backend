@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+}
+
+group = 'fi.poltsi.vempain'
+version = project.hasProperty("releaseVersion") ? project.releaseVersion : '0.0.1-SNAPSHOT'
+
+bootJar {
+	archiveFileName = "${rootProject.name}-${version}.jar"
+}
+
+description = 'Vempain Website public backend (Spring Boot rewrite of the PHP backend)'
+
+java {
+    sourceCompatibility = JavaVersion.toVersion(javaVersion)
+    targetCompatibility = JavaVersion.toVersion(javaVersion)
+}
+
+dependencies {
+    implementation project(':api')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.security:spring-security-crypto'
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"
+	testImplementation "org.testcontainers:testcontainers-postgresql:${testContainersVersion}"
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    include '**/*UTC.class'
+    include '**/*ITC.class'
+    include '**/*CTC.class'
+}
+
+tasks.named('bootJar') {
+    archiveFileName = 'vempain-website-backend.jar'
+}
