@@ -29,10 +29,10 @@ spring:
 vempain:
   site:
     files-root: ${VEMPAIN_WEBSITE_WEB_ROOT:/files}
-    jwt-secret: ${JWT_SECRET:}
+    jwt-secret: ${JWT_SECRET}
     jwt-ttl-seconds: ${JWT_TTL_SECONDS:1200}
     jwt-cookie-name: OXALATE_JWT_TOKEN
-    jwt-cookie-secure: ${COOKIE_SECURE:false}
+    jwt-cookie-secure: ${COOKIE_SECURE:true}
     cors-allowed-origins: ${ENV_VEMPAIN_CORS_ALLOW_ORIGINS:}
 
 logging:

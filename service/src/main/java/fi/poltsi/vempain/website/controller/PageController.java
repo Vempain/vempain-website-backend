@@ -35,7 +35,7 @@ public class PageController implements PageApi {
 	}
 
 	public Object children(@PathVariable long parentId) {
-		return service.children(parentId);
+		return service.children(parentId, user.currentUserId());
 	}
 
 	public Object directories() {

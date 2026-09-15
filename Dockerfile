@@ -15,10 +15,14 @@ RUN ./gradlew :service:bootJar --no-daemon -x test
 FROM eclipse-temurin:25-jre-alpine
 
 RUN apk add --no-cache curl
+RUN addgroup -S vempain && adduser -S -G vempain vempain
 
 WORKDIR /var/www/backend
 
 COPY --from=build /build/service/build/libs/vempain-website-backend.jar ./vempain-website-backend.jar
+RUN chown -R vempain:vempain /var/www/backend
+
+USER vempain
 
 EXPOSE 8000
 

@@ -5,10 +5,19 @@ import fi.poltsi.vempain.website.entity.WebSiteJwtToken;
 import fi.poltsi.vempain.website.repository.WebSiteJwtTokenRepository;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class JwtServiceUTC {
     private final WebSiteJwtTokenRepository repository = mock(WebSiteJwtTokenRepository.class);
@@ -32,6 +41,12 @@ class JwtServiceUTC {
         String token = service.issueToken(1, "u", false);
         assertTrue(service.verify(token + "x").isEmpty());
     }
+
+	@Test
+	void missingSecretCannotFallBackToAWellKnownSigningKey() {
+		properties.setJwtSecret("");
+		assertThrows(IllegalStateException.class, () -> service.issueToken(1, "u", false));
+	}
 
     @Test void persistedValidityAndTtlFallbackWork() {
         properties.setJwtTtlSeconds(0);

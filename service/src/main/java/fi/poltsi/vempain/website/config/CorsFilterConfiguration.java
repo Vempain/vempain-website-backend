@@ -31,12 +31,11 @@ public class CorsFilterConfiguration {
 		                                     .map(String::trim)
 		                                     .filter(origin -> !origin.isEmpty())
 		                                     .toList();
-		if (origins.isEmpty() || origins.contains("*")) {
-			// Credentials cannot be combined with a literal "*", so echo the request origin.
-			configuration.setAllowedOriginPatterns(List.of("*"));
-		} else {
-			configuration.setAllowedOrigins(origins);
-		}
+		// An omitted allow-list must fail closed. Reflecting arbitrary origins while
+		// allowing credentials would let any website make authenticated requests.
+		configuration.setAllowedOrigins(origins.stream()
+		                                       .filter(origin -> !"*".equals(origin))
+		                                       .toList());
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);

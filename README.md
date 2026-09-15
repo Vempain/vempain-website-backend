@@ -43,19 +43,19 @@ JWT signing and verification (HS256) is implemented directly on the JDK crypto A
 
 Every setting is bound to the environment variable the PHP deployment already provides.
 
-| Environment variable             | Property                                            | Default                       |
-|----------------------------------|-----------------------------------------------------|-------------------------------|
-| `ENV_VEMPAIN_SITE_DB_HOST`       | `spring.datasource.url`                             | `127.0.0.1`                   |
-| `ENV_VEMPAIN_SITE_DB_PORT`       | `spring.datasource.url`                             | `5434`                        |
-| `ENV_VEMPAIN_SITE_DB_NAME`       | `spring.datasource.url`                             | `vempain_site_db`             |
-| `ENV_VEMPAIN_SITE_DB_SCHEMA`     | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                |
-| `ENV_VEMPAIN_SITE_DB_USER`       | `spring.datasource.username`                        | `vempain_site`                |
-| `ENV_VEMPAIN_SITE_DB_PASSWORD`   | `spring.datasource.password`                        | -                             |
-| `JWT_SECRET`                     | `vempain.site.jwt-secret`                           | - (insecure fallback, logged) |
-| `JWT_TTL_SECONDS`                | `vempain.site.jwt-ttl-seconds`                      | `1200`                        |
-| `COOKIE_SECURE`                  | `vempain.site.jwt-cookie-secure`                    | `false`                       |
-| `VEMPAIN_WEBSITE_WEB_ROOT`       | `vempain.site.files-root`                           | `/files`                      |
-| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS` | `vempain.site.cors-allowed-origins`                 | all origins                   |
+| Environment variable             | Property                                            | Default                         |
+|----------------------------------|-----------------------------------------------------|---------------------------------|
+| `ENV_VEMPAIN_SITE_DB_HOST`       | `spring.datasource.url`                             | `127.0.0.1`                     |
+| `ENV_VEMPAIN_SITE_DB_PORT`       | `spring.datasource.url`                             | `5434`                          |
+| `ENV_VEMPAIN_SITE_DB_NAME`       | `spring.datasource.url`                             | `vempain_site_db`               |
+| `ENV_VEMPAIN_SITE_DB_SCHEMA`     | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                  |
+| `ENV_VEMPAIN_SITE_DB_USER`       | `spring.datasource.username`                        | `vempain_site`                  |
+| `ENV_VEMPAIN_SITE_DB_PASSWORD`   | `spring.datasource.password`                        | -                               |
+| `JWT_SECRET`                     | `vempain.site.jwt-secret`                           | required (no fallback)          |
+| `JWT_TTL_SECONDS`                | `vempain.site.jwt-ttl-seconds`                      | `1200`                          |
+| `COOKIE_SECURE`                  | `vempain.site.jwt-cookie-secure`                    | `true` (local profile: `false`) |
+| `VEMPAIN_WEBSITE_WEB_ROOT`       | `vempain.site.files-root`                           | `/files`                        |
+| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS` | `vempain.site.cors-allowed-origins`                 | no cross-origin requests        |
 
 ## Authentication
 

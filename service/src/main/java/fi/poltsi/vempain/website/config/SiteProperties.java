@@ -36,7 +36,7 @@ public class SiteProperties {
 	/**
 	 * Whether the auth cookie is flagged Secure.
 	 */
-	private boolean jwtCookieSecure = false;
+	private boolean jwtCookieSecure = true;
 
 	/**
 	 * Origins allowed by the CORS filter; an empty list means "*".

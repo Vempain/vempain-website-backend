@@ -1,6 +1,7 @@
 package fi.poltsi.vempain.website.controller;
 
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
+import fi.poltsi.vempain.website.controller.dto.response.PagedResponse;
 import fi.poltsi.vempain.website.entity.WebSiteFile;
 import fi.poltsi.vempain.website.entity.WebSiteGallery;
 import fi.poltsi.vempain.website.exception.ApiException;
@@ -8,7 +9,6 @@ import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.service.ResourceAccessService;
 import fi.poltsi.vempain.website.service.SubjectLookupService;
-import fi.poltsi.vempain.website.controller.dto.response.PagedResponse;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -142,10 +142,21 @@ public class ResourceController implements ResourceApi {
 
 		access.requireAccess(entity.getAclId());
 		Path root = Paths.get(props.getFilesRoot()).toAbsolutePath().normalize();
+		if (!Files.isDirectory(root)) {
+			return ResponseEntity.notFound()
+			                     .build();
+		}
+		Path realRoot = root.toRealPath();
 		Path target = root.resolve(relativePath).normalize();
 		if (!target.startsWith(root) || !Files.isRegularFile(target)) {
 			return ResponseEntity.notFound().build();
 		}
+		Path realTarget = target.toRealPath();
+		if (!realTarget.startsWith(realRoot) || !Files.isRegularFile(realTarget)) {
+			return ResponseEntity.notFound()
+			                     .build();
+		}
+		target = realTarget;
 
 		long length = Files.size(target);
 		HttpHeaders headers = new HttpHeaders();

@@ -1,3 +1,6 @@
 logging:
   level:
     fi.poltsi.vempain.website: DEBUG
+vempain:
+  site:
+    jwt-cookie-secure: false

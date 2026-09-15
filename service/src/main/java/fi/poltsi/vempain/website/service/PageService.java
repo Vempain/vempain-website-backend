@@ -1,10 +1,10 @@
 package fi.poltsi.vempain.website.service;
 
+import fi.poltsi.vempain.website.controller.dto.response.PagedResponse;
+import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiException;
 import fi.poltsi.vempain.website.repository.WebSitePageRepository;
-import fi.poltsi.vempain.website.controller.dto.response.PagedResponse;
-import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -86,8 +86,8 @@ public class PageService {
 		            .orElse(null);
 	}
 
-	public List<Map<String, Object>> children(long parent) {
-		return pages.findByParentIdOrderByPublishedAsc(parent)
+	public List<Map<String, Object>> children(long parent, long userId) {
+		return pages.findByParentIdForUser(parent, userId)
 		            .stream()
 		            .map(x -> {
 						Map<String, Object> m = new LinkedHashMap<>();

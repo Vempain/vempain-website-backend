@@ -4,9 +4,16 @@ import fi.poltsi.vempain.website.auth.AuthenticatedUser;
 import fi.poltsi.vempain.website.auth.JwtService;
 import fi.poltsi.vempain.website.repository.WebSiteAclRepository;
 import org.junit.jupiter.api.Test;
+
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class AclServiceUTC {
     private final WebSiteAclRepository repository = mock(WebSiteAclRepository.class);
@@ -27,6 +34,14 @@ class AclServiceUTC {
         when(repository.existsByAclIdAndUserId(4L, 12L)).thenReturn(true);
         assertTrue(service.canAccess(4L, new AuthenticatedUser(12, "u", false, "t")));
     }
+
+	@Test
+	void globalPermissionStillRequiresAnActivePersistedToken() {
+		when(repository.existsByAclId(9L)).thenReturn(true);
+		when(jwt.tokenOwner("revoked")).thenReturn(Optional.empty());
+		assertFalse(service.canAccess(9L, new AuthenticatedUser(1, "admin", true, "revoked")));
+		verify(repository, never()).existsByAclIdAndUserId(anyLong(), anyLong());
+	}
 
     @Test void missingInvalidOrNonMemberIsDenied() {
         when(repository.existsByAclId(4L)).thenReturn(true);
