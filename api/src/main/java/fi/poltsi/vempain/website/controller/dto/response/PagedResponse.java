@@ -10,6 +10,14 @@ import java.util.List;
  * contract and are consumed by the frontend as snake_case.
  *
  * @param <T> type of the listed element
+ * @param content elements on the current page
+ * @param page zero-based page number
+ * @param size requested page size
+ * @param totalElements total number of matching elements
+ * @param totalPages total number of pages
+ * @param first whether this is the first page
+ * @param last whether this is the last page
+ * @param empty whether the result contains no items
  */
 @Schema(name = "PagedResponse", description = "Common zero-based pagination envelope")
 public record PagedResponse<T>(
@@ -32,10 +40,14 @@ public record PagedResponse<T>(
 ) {
 
 	/**
+	 * Creates a pagination envelope and calculates its page metadata.
+	 *
 	 * @param content       elements of the current page
 	 * @param page          zero based page number
 	 * @param size          requested page size
 	 * @param totalElements total number of matching elements
+	 * @param <T>           type of the listed element
+	 * @return a pagination envelope containing the supplied elements and calculated page metadata
 	 */
 	public static <T> PagedResponse<T> of(List<T> content, int page, int size, long totalElements) {
 		int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / (double) size) : 0;

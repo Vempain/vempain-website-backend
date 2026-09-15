@@ -1,22 +1,34 @@
 package fi.poltsi.vempain.website.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
+/**
+ * REST contract for files and galleries.
+ */
 @Tag(name = "Resources", description = "Files and galleries")
 public interface ResourceApi {
+	/** Base path for resource endpoints. */
 	String BASE_PATH = "/api";
+	/** Base path for public resource endpoints. */
 	String PUBLIC_PATH = BASE_PATH + "/public";
 
+	/**
+	 * Lists files.
+	 *
+	 * @param page zero-based page number
+	 * @param perPage requested page size
+	 * @return file list
+	 */
 	@GetMapping(path = {BASE_PATH + "/files", PUBLIC_PATH + "/files"}, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List files")
 	@ApiResponses({
@@ -26,6 +38,12 @@ public interface ResourceApi {
 	})
 	Object listFiles(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int perPage);
 
+	/**
+	 * Returns public file metadata by identifier.
+	 *
+	 * @param id file identifier
+	 * @return file metadata
+	 */
 	@GetMapping(path = PUBLIC_PATH + "/files/id/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get a public file by ID")
 	@ApiResponses({
@@ -36,6 +54,11 @@ public interface ResourceApi {
 	})
 	Object fileById(@PathVariable long id);
 
+	/**
+	 * Lists galleries.
+	 *
+	 * @return galleries
+	 */
 	@GetMapping(path = BASE_PATH + "/galleries", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List galleries")
 	@ApiResponses({
@@ -44,6 +67,11 @@ public interface ResourceApi {
 	})
 	Object galleries();
 
+	/**
+	 * Lists public galleries.
+	 *
+	 * @return public galleries
+	 */
 	@GetMapping(path = PUBLIC_PATH + "/galleries", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List public galleries")
 	@ApiResponses({
@@ -52,6 +80,14 @@ public interface ResourceApi {
 	})
 	Object publicGalleries();
 
+	/**
+	 * Lists files in a gallery.
+	 *
+	 * @param galleryId gallery identifier
+	 * @param page zero-based page number
+	 * @param perPage requested page size
+	 * @return gallery files
+	 */
 	@GetMapping(path = {BASE_PATH + "/galleries/{galleryId}/files", PUBLIC_PATH + "/galleries/{galleryId}/files"},
 			produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "List files in a gallery")
@@ -65,6 +101,14 @@ public interface ResourceApi {
 	Object galleryFiles(@PathVariable long galleryId, @RequestParam(defaultValue = "0") int page,
 	                    @RequestParam(defaultValue = "25") int perPage);
 
+	/**
+	 * Streams file content.
+	 *
+	 * @param path file path
+	 * @param request incoming HTTP request
+	 * @return file content response
+	 * @throws java.io.IOException if file content cannot be read
+	 */
 	@GetMapping(path = {"/file/{*path}", PUBLIC_PATH + "/files/{*path}"},
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	@Operation(summary = "Stream a file")
