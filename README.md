@@ -76,9 +76,9 @@ Cookie based, mirroring the PHP behaviour:
 # from backend-spring/, after the PostgreSQL service is available on port 5434
 ./start.sh
 
-# or explicitly (the dev profile enables SQL logging)
+# or explicitly (the local profile enables development logging)
 ./gradlew :service:bootRun
-./gradlew :service:bootRun --args='--spring.profiles.active=dev'
+./gradlew :service:bootRun --args='--spring.profiles.active=local'
 
 # compile, run all tests, and produce the test report
 ./gradlew clean test
@@ -88,10 +88,11 @@ Cookie based, mirroring the PHP behaviour:
 PostgreSQL. The defaults match the repository's local `.env` configuration. For a different
 database, export the variables listed in the configuration table before invoking Gradle.
 
-When running locally, the API documentation is available at:
+When running locally with `start.sh`, the API listens on port `10010` and the
+management server listens on port `10011`. The API documentation is available at:
 
-- Swagger UI: http://localhost:8000/swagger-ui/index.html
-- OpenAPI document: http://localhost:8000/v3/api-docs
+- Swagger UI: http://localhost:10010/swagger-ui/index.html
+- OpenAPI document: http://localhost:10010/v3/api-docs
 
 Both endpoints are disabled when the `prod` Spring Boot profile is active.
 
