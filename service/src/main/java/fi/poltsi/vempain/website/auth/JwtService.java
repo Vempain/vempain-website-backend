@@ -209,8 +209,7 @@ public class JwtService {
 	private byte[] secret() {
 		String secret = siteProperties.getJwtSecret();
 		if (secret == null || secret.isBlank()) {
-			LOG.warn("No JWT secret configured, falling back to an insecure default");
-			secret = "secret";
+			throw new IllegalStateException("JWT_SECRET must be configured");
 		}
 
 		return secret.getBytes(StandardCharsets.UTF_8);

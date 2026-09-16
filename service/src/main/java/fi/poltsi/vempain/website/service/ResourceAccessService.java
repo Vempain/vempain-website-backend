@@ -31,10 +31,6 @@ public class ResourceAccessService {
 
 		AuthenticatedUser user = currentUserProvider.current()
 		                                            .orElse(null);
-		if (user != null && user.globalPermission()) {
-			return Optional.empty();
-		}
-
 		if (aclService.canAccess(aclId, user)) {
 			return Optional.empty();
 		}

@@ -17,12 +17,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class ResourceControllerUTC {
 	private final WebSiteFileRepository files = mock(WebSiteFileRepository.class);
@@ -132,6 +137,20 @@ class ResourceControllerUTC {
 		when(files.findByFilePath("../secret.txt")).thenReturn(Optional.of(entity));
 
 		ResponseEntity<Resource> response = controller.raw("../secret.txt", request(null));
+
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+	}
+
+	@Test
+	void rejectsSymlinkEscapingTheConfiguredRoot(@TempDir Path root) throws Exception {
+		Path outside   = Files.writeString(root.resolveSibling("outside.txt"), "secret");
+		Path filesRoot = Files.createDirectory(root.resolve("files"));
+		Files.createSymbolicLink(filesRoot.resolve("linked.txt"), outside);
+		properties.setFilesRoot(filesRoot.toString());
+		WebSiteFile entity = fileEntity("linked.txt", "text/plain", null);
+		when(files.findByFilePath("linked.txt")).thenReturn(Optional.of(entity));
+
+		ResponseEntity<Resource> response = controller.raw("linked.txt", request(null));
 
 		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 	}

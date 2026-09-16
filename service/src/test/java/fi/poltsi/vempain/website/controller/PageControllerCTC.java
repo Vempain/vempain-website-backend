@@ -1,10 +1,10 @@
 package fi.poltsi.vempain.website.controller;
 
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
+import fi.poltsi.vempain.website.controller.dto.response.PagedResponse;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiExceptionHandler;
 import fi.poltsi.vempain.website.service.PageService;
-import fi.poltsi.vempain.website.controller.dto.response.PagedResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +16,15 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class PageControllerCTC {
@@ -38,7 +43,7 @@ class PageControllerCTC {
 		when(user.currentUserId()).thenReturn(-1L);
 		when(pages.list(anyInt(), anyInt(), anyString(), anyString(), any(), anyLong()))
 				.thenReturn(PagedResponse.of(List.of(), 0, 12, 0));
-		when(pages.children(4L)).thenReturn(List.of());
+		when(pages.children(4L, -1L)).thenReturn(List.of());
 		when(pages.directories()).thenReturn(List.of());
 		when(pages.directoryTree("photos", -1L)).thenReturn(List.of());
 		WebSitePage page = mock(WebSitePage.class);

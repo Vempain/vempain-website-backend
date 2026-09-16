@@ -1,12 +1,19 @@
 package fi.poltsi.vempain.website.service;
 
-import fi.poltsi.vempain.website.auth.*;
+import fi.poltsi.vempain.website.auth.AuthenticatedUser;
+import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.exception.ApiException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ResourceAccessServiceUTC {
     private final AclService acl = mock(AclService.class);
@@ -16,8 +23,9 @@ class ResourceAccessServiceUTC {
     @Test void publicAndGlobalResourcesAreAccessible() {
         assertTrue(service.isAccessible(null));
         when(users.current()).thenReturn(Optional.of(new AuthenticatedUser(1, "a", true, "t")));
+		when(acl.canAccess(4L, new AuthenticatedUser(1, "a", true, "t"))).thenReturn(true);
         assertTrue(service.deniedStatus(4L).isEmpty());
-        verifyNoInteractions(acl);
+		verify(acl).canAccess(4L, new AuthenticatedUser(1, "a", true, "t"));
     }
 
     @Test void anonymousAndUnauthorizedStatusesAreDistinct() {

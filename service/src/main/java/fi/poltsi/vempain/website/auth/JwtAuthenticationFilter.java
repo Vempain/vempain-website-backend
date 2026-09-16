@@ -50,13 +50,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		user.ifPresent(authenticated ->
+		user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
+		    .ifPresent(authenticated ->
 							   request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, authenticated));
 
 		filterChain.doFilter(request, response);
 
-		if (user.isPresent() && !response.isCommitted()) {
-			cookieWriter.write(response, jwtService.refresh(user.get()), jwtService.ttlSeconds());
+		if (user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
+		        .isPresent()
+		    && !response.isCommitted()) {
+			cookieWriter.write(response, jwtService.refresh(user.orElseThrow()), jwtService.ttlSeconds());
 		}
 	}
 }

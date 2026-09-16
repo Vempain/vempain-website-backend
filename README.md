@@ -43,19 +43,19 @@ JWT signing and verification (HS256) is implemented directly on the JDK crypto A
 
 Every setting is bound to the environment variable the PHP deployment already provides.
 
-| Environment variable             | Property                                            | Default                       |
-|----------------------------------|-----------------------------------------------------|-------------------------------|
-| `ENV_VEMPAIN_SITE_DB_HOST`       | `spring.datasource.url`                             | `127.0.0.1`                   |
-| `ENV_VEMPAIN_SITE_DB_PORT`       | `spring.datasource.url`                             | `5434`                        |
-| `ENV_VEMPAIN_SITE_DB_NAME`       | `spring.datasource.url`                             | `vempain_site_db`             |
-| `ENV_VEMPAIN_SITE_DB_SCHEMA`     | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                |
-| `ENV_VEMPAIN_SITE_DB_USER`       | `spring.datasource.username`                        | `vempain_site`                |
-| `ENV_VEMPAIN_SITE_DB_PASSWORD`   | `spring.datasource.password`                        | -                             |
-| `JWT_SECRET`                     | `vempain.site.jwt-secret`                           | - (insecure fallback, logged) |
-| `JWT_TTL_SECONDS`                | `vempain.site.jwt-ttl-seconds`                      | `1200`                        |
-| `COOKIE_SECURE`                  | `vempain.site.jwt-cookie-secure`                    | `false`                       |
-| `VEMPAIN_WEBSITE_WEB_ROOT`       | `vempain.site.files-root`                           | `/files`                      |
-| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS` | `vempain.site.cors-allowed-origins`                 | all origins                   |
+| Environment variable             | Property                                            | Default                         |
+|----------------------------------|-----------------------------------------------------|---------------------------------|
+| `ENV_VEMPAIN_SITE_DB_HOST`       | `spring.datasource.url`                             | `127.0.0.1`                     |
+| `ENV_VEMPAIN_SITE_DB_PORT`       | `spring.datasource.url`                             | `5434`                          |
+| `ENV_VEMPAIN_SITE_DB_NAME`       | `spring.datasource.url`                             | `vempain_site_db`               |
+| `ENV_VEMPAIN_SITE_DB_SCHEMA`     | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                  |
+| `ENV_VEMPAIN_SITE_DB_USER`       | `spring.datasource.username`                        | `vempain_site`                  |
+| `ENV_VEMPAIN_SITE_DB_PASSWORD`   | `spring.datasource.password`                        | -                               |
+| `JWT_SECRET`                     | `vempain.site.jwt-secret`                           | required (no fallback)          |
+| `JWT_TTL_SECONDS`                | `vempain.site.jwt-ttl-seconds`                      | `1200`                          |
+| `COOKIE_SECURE`                  | `vempain.site.jwt-cookie-secure`                    | `true` (local profile: `false`) |
+| `VEMPAIN_WEBSITE_WEB_ROOT`       | `vempain.site.files-root`                           | `/files`                        |
+| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS` | `vempain.site.cors-allowed-origins`                 | no cross-origin requests        |
 
 ## Authentication
 
@@ -76,9 +76,9 @@ Cookie based, mirroring the PHP behaviour:
 # from backend-spring/, after the PostgreSQL service is available on port 5434
 ./start.sh
 
-# or explicitly (the dev profile enables SQL logging)
+# or explicitly (the local profile enables development logging)
 ./gradlew :service:bootRun
-./gradlew :service:bootRun --args='--spring.profiles.active=dev'
+./gradlew :service:bootRun --args='--spring.profiles.active=local'
 
 # compile, run all tests, and produce the test report
 ./gradlew clean test
@@ -88,10 +88,11 @@ Cookie based, mirroring the PHP behaviour:
 PostgreSQL. The defaults match the repository's local `.env` configuration. For a different
 database, export the variables listed in the configuration table before invoking Gradle.
 
-When running locally, the API documentation is available at:
+When running locally with `start.sh`, the API listens on port `10010` and the
+management server listens on port `10011`. The API documentation is available at:
 
-- Swagger UI: http://localhost:8000/swagger-ui/index.html
-- OpenAPI document: http://localhost:8000/v3/api-docs
+- Swagger UI: http://localhost:10010/swagger-ui/index.html
+- OpenAPI document: http://localhost:10010/v3/api-docs
 
 Both endpoints are disabled when the `prod` Spring Boot profile is active.
 

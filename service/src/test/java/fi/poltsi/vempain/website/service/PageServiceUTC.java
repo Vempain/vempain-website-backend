@@ -4,12 +4,20 @@ import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiException;
 import fi.poltsi.vempain.website.repository.WebSitePageRepository;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class PageServiceUTC {
     private final WebSitePageRepository pages = mock(WebSitePageRepository.class);
@@ -40,8 +48,9 @@ class PageServiceUTC {
     @Test void lookupChildrenDirectoriesAndRequireDelegate() {
         when(pages.findByFilePath("/a")).thenReturn(Optional.empty());
         assertNull(service.byPath("/a"));
-        when(pages.findByParentIdOrderByPublishedAsc(2L)).thenReturn(List.of());
-        assertTrue(service.children(2L).isEmpty());
+		when(pages.findByParentIdForUser(2L, -1L)).thenReturn(List.of());
+		assertTrue(service.children(2L, -1L)
+	                      .isEmpty());
         when(pages.findTopLevelDirectories()).thenReturn(List.of("a"));
         assertEquals("a", service.directories().get(0).get("name"));
         WebSitePage treePage = pageWithPath("docs/readme");

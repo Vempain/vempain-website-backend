@@ -28,6 +28,10 @@ public interface WebSitePageRepository extends JpaRepository<WebSitePage, Long>,
 
 	List<WebSitePage> findByParentIdOrderByPublishedAsc(Long parentId);
 
+	@Query("SELECT p FROM WebSitePage p LEFT JOIN WebSiteAcl a ON a.aclId = p.aclId WHERE "
+	       + ACCESS_CONDITION + " AND p.parentId = :parentId ORDER BY p.published ASC")
+	List<WebSitePage> findByParentIdForUser(@Param("parentId") long parentId, @Param("userId") long userId);
+
 	@Query("SELECT p FROM WebSitePage p LEFT JOIN WebSiteAcl a ON a.aclId = p.aclId WHERE " + ACCESS_CONDITION
 	       + " AND p.filePath LIKE :directoryPrefix"
 	       + " ORDER BY p.filePath ASC")

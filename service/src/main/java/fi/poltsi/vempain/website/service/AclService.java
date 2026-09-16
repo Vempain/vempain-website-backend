@@ -36,7 +36,7 @@ public class AclService {
 			return false;
 		}
 
-		return aclRepository.existsByAclIdAndUserId(aclId, user.userId());
+		return user.globalPermission() || aclRepository.existsByAclIdAndUserId(aclId, user.userId());
 	}
 
 	/**
