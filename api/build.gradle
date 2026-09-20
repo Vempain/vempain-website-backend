@@ -6,7 +6,7 @@ plugins {
 description = 'Vempain Website REST API contracts and DTOs'
 
 group = 'fi.poltsi.vempain'
-version = project.hasProperty("releaseVersion") ? project.releaseVersion : '0.0.1-SNAPSHOT'
+version = libs.versions.release.get()
 def apiArtifactName = "${rootProject.name}-api"
 
 jar {
@@ -31,7 +31,7 @@ dependencies {
     api 'org.springframework:spring-web'
     api 'jakarta.servlet:jakarta.servlet-api'
     api 'com.fasterxml.jackson.core:jackson-annotations'
-    api "io.swagger.core.v3:swagger-annotations:${swaggerVersion}"
+    api "io.swagger.core.v3:swagger-annotations:${libs.versions.swagger.get()}"
 }
 
 // Publish the API module to GitHub Packages when invoked by CI

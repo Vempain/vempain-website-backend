@@ -2,7 +2,8 @@ FROM gradle:9.1.0-jdk25 AS build
 
 WORKDIR /build
 
-COPY gradlew settings.gradle build.gradle gradle.properties ./
+COPY gradlew settings.gradle build.gradle ./
+COPY gradle/libs.versions.toml gradle/libs.versions.toml
 COPY gradle/wrapper ./gradle/wrapper
 COPY api/build.gradle api/build.gradle
 COPY service/build.gradle service/build.gradle

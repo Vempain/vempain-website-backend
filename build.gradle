@@ -1,11 +1,11 @@
 plugins {
-    id 'org.springframework.boot' version "${springBootVersion}" apply false
-    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}" apply false
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management) apply false
 }
 
 allprojects {
     group = 'fi.poltsi.vempain'
-    version = releaseVersion
+    version = libs.versions.release.get()
 }
 
 subprojects {
@@ -13,14 +13,14 @@ subprojects {
 
     dependencyManagement {
         imports {
-            mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+            mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
         }
     }
 
     plugins.withId('java') {
         java {
-            sourceCompatibility = JavaVersion.toVersion(javaVersion)
-            targetCompatibility = JavaVersion.toVersion(javaVersion)
+            sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
+            targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
         }
     }
 }
