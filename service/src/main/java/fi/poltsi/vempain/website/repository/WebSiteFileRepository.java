@@ -37,6 +37,34 @@ public interface WebSiteFileRepository extends JpaRepository<WebSiteFile, Long> 
 
 	List<WebSiteFile> findByIdIn(Collection<Long> ids);
 
+	@Query(value = """
+			SELECT DISTINCT f.* FROM web_site_file f
+			JOIN web_site_file_subject fs ON fs.file_id = f.id
+			LEFT JOIN web_site_acl a ON a.acl_id = f.acl_id
+			WHERE fs.subject_id IN (:subjectIds)
+			  AND (a.acl_id IS NULL OR a.user_id = :userId
+			       OR EXISTS (SELECT 1 FROM web_site_users u
+			                 WHERE u.id = :userId AND u.global_permission = TRUE))
+			ORDER BY f.id ASC
+			LIMIT :limit OFFSET :offset
+			""", nativeQuery = true)
+	List<WebSiteFile> findBySubjectIdsForUser(@Param("subjectIds") Collection<Long> subjectIds,
+											  @Param("userId") long userId,
+											  @Param("limit") int limit,
+											  @Param("offset") int offset);
+
+	@Query(value = """
+			SELECT COUNT(DISTINCT f.id) FROM web_site_file f
+			JOIN web_site_file_subject fs ON fs.file_id = f.id
+			LEFT JOIN web_site_acl a ON a.acl_id = f.acl_id
+			WHERE fs.subject_id IN (:subjectIds)
+			  AND (a.acl_id IS NULL OR a.user_id = :userId
+			       OR EXISTS (SELECT 1 FROM web_site_users u
+			                 WHERE u.id = :userId AND u.global_permission = TRUE))
+			""", nativeQuery = true)
+	long countBySubjectIdsForUser(@Param("subjectIds") Collection<Long> subjectIds,
+								  @Param("userId") long userId);
+
 	@Query("SELECT f FROM WebSiteFile f LEFT JOIN WebSiteAcl a ON a.aclId = f.aclId WHERE " + OWN_ACL_ACCESS_CONDITION
 	       + " ORDER BY f.id DESC")
 	List<WebSiteFile> findAllFilesForUser(@Param("userId") long userId);

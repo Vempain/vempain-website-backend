@@ -26,6 +26,34 @@ public interface WebSitePageRepository extends JpaRepository<WebSitePage, Long>,
 
 	List<WebSitePage> findByIdIn(Collection<Long> ids);
 
+	@Query(value = """
+			SELECT DISTINCT p.* FROM web_site_page p
+			JOIN web_site_page_subject ps ON ps.page_id = p.id
+			LEFT JOIN web_site_acl a ON a.acl_id = p.acl_id
+			WHERE ps.subject_id IN (:subjectIds)
+			  AND (a.acl_id IS NULL OR a.user_id = :userId
+			       OR EXISTS (SELECT 1 FROM web_site_users u
+			                 WHERE u.id = :userId AND u.global_permission = TRUE))
+			ORDER BY p.id ASC
+			LIMIT :limit OFFSET :offset
+			""", nativeQuery = true)
+	List<WebSitePage> findBySubjectIdsForUser(@Param("subjectIds") Collection<Long> subjectIds,
+											  @Param("userId") long userId,
+											  @Param("limit") int limit,
+											  @Param("offset") int offset);
+
+	@Query(value = """
+			SELECT COUNT(DISTINCT p.id) FROM web_site_page p
+			JOIN web_site_page_subject ps ON ps.page_id = p.id
+			LEFT JOIN web_site_acl a ON a.acl_id = p.acl_id
+			WHERE ps.subject_id IN (:subjectIds)
+			  AND (a.acl_id IS NULL OR a.user_id = :userId
+			       OR EXISTS (SELECT 1 FROM web_site_users u
+			                 WHERE u.id = :userId AND u.global_permission = TRUE))
+			""", nativeQuery = true)
+	long countBySubjectIdsForUser(@Param("subjectIds") Collection<Long> subjectIds,
+								  @Param("userId") long userId);
+
 	List<WebSitePage> findByParentIdOrderByPublishedAsc(Long parentId);
 
 	@Query("SELECT p FROM WebSitePage p LEFT JOIN WebSiteAcl a ON a.aclId = p.aclId WHERE "

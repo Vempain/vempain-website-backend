@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.controller;
 
+import fi.poltsi.vempain.website.controller.dto.response.SubjectSearchResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -48,5 +49,5 @@ public interface SubjectSearchApi {
 			@ApiResponse(responseCode = "400", description = "Invalid search request"),
 			@ApiResponse(responseCode = "500", description = "Unexpected server error")
 	})
-	Object searchIds(@RequestBody(required = false) Map<String, Object> body);
+	SubjectSearchResponse searchIds(@RequestBody(required = false) Map<String, Object> body);
 }
