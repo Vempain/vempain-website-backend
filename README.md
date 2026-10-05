@@ -1,6 +1,7 @@
 # Vempain Website backend (Spring Boot)
 
-Complete rewrite of the PHP backend in `../backend` on **Spring Boot 4.1.1** / **Java 25**.
+Current public website backend on **Spring Boot 4.1.1** / **Java 25**. The
+former PHP backend was discarded and is not a supported runtime.
 
 The Gradle wrapper is included, so no system Gradle installation is required. A Java 25 JDK is
 required for local builds and runtime. Docker builds use the same Java version.
@@ -9,12 +10,10 @@ The module is a drop-in replacement: it listens on the same port (`8000`), serve
 `/health`), reads the same environment variables and talks to the same PostgreSQL schema (`vempain_site`). The schema is
 owned by the Vempain admin backend and is never modified from here (`spring.jpa.hibernate.ddl-auto: none`).
 
-## The one intentional behavioural difference
+## Content safety
 
-The PHP backend could `eval()` PHP fragments embedded in page content
-(`backend/src/Application/Service/PageCacheEvaluator.php`, including helper shims from
-`backend/legacy/shims/lib`). **This version never evaluates page content.** Page bodies are served from the
-publisher-provided `web_site_page.cache` column when it is populated, and from `web_site_page.body` verbatim otherwise.
+Page content is never evaluated as executable code. Page bodies are served from the publisher-provided
+`web_site_page.cache` column when it is populated, and from `web_site_page.body` verbatim otherwise.
 Everything else - embed parsing, the dynamic
 `word_cloud` and `today_random` payload injection, ACL filtering, caching semantics - is reproduced.
 
@@ -41,7 +40,7 @@ JWT signing and verification (HS256) is implemented directly on the JDK crypto A
 
 ## Configuration
 
-Every setting is bound to the environment variable the PHP deployment already provides.
+Every setting is bound to the environment variables used by the current Vempain deployment.
 
 | Environment variable             | Property                                            | Default                         |
 |----------------------------------|-----------------------------------------------------|---------------------------------|
@@ -59,7 +58,7 @@ Every setting is bound to the environment variable the PHP deployment already pr
 
 ## Authentication
 
-Cookie based, mirroring the PHP behaviour:
+Cookie-based authentication:
 
 - `POST /api/login` returns `{"token": "..."}` and sets the `HttpOnly` `OXALATE_JWT_TOKEN` cookie (`Path=/`, `SameSite=Lax`).
 - The token is also accepted as `Authorization: Bearer <token>`.
@@ -103,11 +102,9 @@ docker build -t vempain-site-backend-spring backend-spring
 ```
 
 The image listens on port 8000 and requires the database, JWT, and file-root environment
-variables at runtime. To use it instead of the PHP backend in `docker-compose.yml`, change the
-`vempain-site-backend.build.context` value to `./backend-spring`, remove the
-`./backend:/var/www/backend` bind mount, and add `COOKIE_SECURE` or
-`ENV_VEMPAIN_CORS_ALLOW_ORIGINS` if needed. Keep the existing environment block, file/log mounts,
-health check, and Traefik labels.
+variables at runtime. Build it from this repository's root with `docker build -t
+vempain-site-backend .`; deployment wiring belongs to the current compose/Swarm
+configuration, not to a legacy PHP bind mount.
 
 ## Layout
 

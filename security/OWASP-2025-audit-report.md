@@ -1,9 +1,8 @@
 # OWASP Top 10:2025 audit — Vempain website backend
 
 **Audit date:** 2026-09-15  
-**Scope:** Spring replacement backend in this repository. The legacy PHP implementation and React frontend were not
-modified; see the [frontend report](../../vempain-website-frontend/security/OWASP-2025-audit-report.md) when present.
-PHP remains a separate migration residual and must not be considered protected by these fixes.
+**Scope:** Spring Boot backend in this repository. The React frontend was not modified; see the
+[frontend report](../../vempain-website-frontend/security/OWASP-2025-audit-report.md) when present.
 
 ## Phase 0 — assets and trust boundaries
 
@@ -90,5 +89,5 @@ configuration were not run locally; those remain deployment checks.
 
 Login rate limiting, centralized alerting, dependency/SBOM scanning, CI SHA pinning, image digest pinning and minimum
 JWT entropy validation are deferred operational improvements. The Spring backend intentionally does **not** evaluate
-legacy PHP page fragments; PHP remains a separate implementation and its `/file`, page rendering, cookie/CORS and ACL
-controls require an independent audit before traffic is switched. No frontend code was changed.
+page content as executable code. Its `/file`, page rendering, cookie/CORS, and ACL controls require verification
+together with the frontend deployment. No frontend code was changed.
