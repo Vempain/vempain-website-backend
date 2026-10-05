@@ -19,11 +19,12 @@ Everything else - embed parsing, the dynamic
 
 ## Dependencies
 
-Kept deliberately small; there is no third-party JWT, mapping or utility library:
+Kept deliberately small; there is no third-party JWT, mapping or utility library. Lombok (via the
+`io.freefair.lombok` Gradle plugin) generates accessors, constructors and loggers like in the other Vempain backends:
 
 | Dependency                            | Why                                                                 |
 |---------------------------------------|---------------------------------------------------------------------|
-| `spring-boot-starter-web`             | REST controllers, JSON, embedded Tomcat                             |
+| `spring-boot-starter-webmvc`          | REST controllers, JSON, embedded Tomcat                             |
 | `spring-boot-starter-data-jpa`        | entity mapping and `JdbcTemplate` for the native PostgreSQL queries |
 | `postgresql`                          | JDBC driver                                                         |
 | `spring-security-crypto`              | bcrypt verification of the existing password hashes                 |
@@ -72,7 +73,7 @@ Cookie-based authentication:
 ## Running
 
 ```bash
-# from backend-spring/, after the PostgreSQL service is available on port 5434
+# from the repository root, after the PostgreSQL service is available on port 5434
 ./start.sh
 
 # or explicitly (the local profile enables development logging)
@@ -98,23 +99,25 @@ Both endpoints are disabled when the `prod` Spring Boot profile is active.
 Container image:
 
 ```bash
-docker build -t vempain-site-backend-spring backend-spring
+docker build -t vempain-website-backend .
 ```
 
 The image listens on port 8000 and requires the database, JWT, and file-root environment
-variables at runtime. Build it from this repository's root with `docker build -t
-vempain-site-backend .`; deployment wiring belongs to the current compose/Swarm
-configuration, not to a legacy PHP bind mount.
+variables at runtime. Deployment wiring belongs to the current compose/Swarm
+configuration in `vempain-cluster`, not to a legacy PHP bind mount.
 
 ## Layout
 
 ```
-api/                REST API contracts and shared response DTOs
+api/                REST API interfaces and shared request/response DTO records
 service/            Spring Boot application and implementation code
-  auth/              JWT issuing/verification, cookie handling, current caller
-  config/             typed configuration and the CORS filter
-  domain/entity/      JPA mappings of the vempain_site tables
-  domain/repository/  Spring Data repositories plus the ported native queries
-  service/            application logic (ACL, pages, files, galleries, search, embeds)
-  web/                REST controller implementations and error handling
+  auth/             JWT issuing/verification, cookie handling, current caller
+  config/           typed configuration, CORS and security-header filters, OpenAPI
+  entity/           JPA mappings of the vempain_site tables
+  repository/       Spring Data repositories plus the ported native queries
+  service/          application logic (ACL, pages, published data, subject search)
+  controller/       REST controller implementations and error handling
 ```
+
+Test classes follow the shared Vempain suffixes: `UTC` (unit), `CTC` (controller), `ITC` (integration with
+Testcontainers) and `JTC` (JSON contract). See `AGENTS.md` for the full engineering conventions.

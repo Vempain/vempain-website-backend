@@ -5,9 +5,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Access control list row. A resource referencing {@code acl_id} is visible to the
@@ -16,6 +19,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "web_site_acl")
 @IdClass(WebSiteAcl.WebSiteAclId.class)
+@Getter
 public class WebSiteAcl {
 
 	@Id
@@ -26,41 +30,12 @@ public class WebSiteAcl {
 	@Column(name = "user_id", nullable = false)
 	private Long userId;
 
-	public Long getAclId() {
-		return aclId;
-	}
-
-	public Long getUserId() {
-		return userId;
-	}
-
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@EqualsAndHashCode
 	public static class WebSiteAclId implements Serializable {
 
 		private Long aclId;
 		private Long userId;
-
-		public WebSiteAclId() {
-		}
-
-		public WebSiteAclId(Long aclId, Long userId) {
-			this.aclId  = aclId;
-			this.userId = userId;
-		}
-
-		@Override
-		public boolean equals(Object other) {
-			if (this == other) {
-				return true;
-			}
-			if (!(other instanceof WebSiteAclId that)) {
-				return false;
-			}
-			return Objects.equals(aclId, that.aclId) && Objects.equals(userId, that.userId);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(aclId, userId);
-		}
 	}
 }

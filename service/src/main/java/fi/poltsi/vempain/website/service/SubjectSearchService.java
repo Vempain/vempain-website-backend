@@ -8,6 +8,7 @@ import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.repository.WebSitePageRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -16,19 +17,12 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class SubjectSearchService {
 	private final WebSitePageRepository    pageRepository;
 	private final WebSiteGalleryRepository galleryRepository;
 	private final WebSiteFileRepository    fileRepository;
 	private final SubjectLookupService     subjects;
-
-	public SubjectSearchService(WebSitePageRepository pageRepository, WebSiteGalleryRepository galleryRepository,
-								WebSiteFileRepository fileRepository, SubjectLookupService subjects) {
-		this.pageRepository    = pageRepository;
-		this.galleryRepository = galleryRepository;
-		this.fileRepository    = fileRepository;
-		this.subjects          = subjects;
-	}
 
 	public SubjectSearchResponse search(Collection<Long> subjectIds, int page, int size, long userId) {
 		int p = Math.max(0, page);

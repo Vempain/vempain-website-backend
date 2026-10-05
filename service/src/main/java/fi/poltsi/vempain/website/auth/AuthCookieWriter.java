@@ -3,6 +3,7 @@ package fi.poltsi.vempain.website.auth;
 import fi.poltsi.vempain.website.config.SiteProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
@@ -14,15 +15,12 @@ import java.util.List;
  * because {@code SameSite} is not exposed by the servlet cookie API.
  */
 @Component
+@RequiredArgsConstructor
 public class AuthCookieWriter {
 
 	private static final String AUTH_TOKEN_HEADER = "X-Auth-Token";
 
 	private final SiteProperties siteProperties;
-
-	public AuthCookieWriter(SiteProperties siteProperties) {
-		this.siteProperties = siteProperties;
-	}
 
 	/**
 	 * Reads the token from the {@code Authorization} header, falling back to the cookie.

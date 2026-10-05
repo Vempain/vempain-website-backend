@@ -5,6 +5,7 @@ import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiException;
 import fi.poltsi.vempain.website.repository.WebSitePageRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,17 +16,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 public class PageService {
 	private static final Pattern               SEARCH = Pattern.compile("\"([^\"]+)\"|(\\S+)");
 	private final        WebSitePageRepository pages;
 	private final        SubjectLookupService  subjects;
 	private final        ResourceAccessService access;
-
-	public PageService(WebSitePageRepository pages, SubjectLookupService subjects, ResourceAccessService access) {
-		this.pages    = pages;
-		this.subjects = subjects;
-		this.access   = access;
-	}
 
 	public Map<String, Object> page(WebSitePage p) {
 		Map<String, Object> m = new LinkedHashMap<>();

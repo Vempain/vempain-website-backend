@@ -3,19 +3,16 @@ package fi.poltsi.vempain.website.controller;
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.service.PageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class PageController implements PageApi {
 	private final PageService         service;
 	private final CurrentUserProvider user;
-
-	public PageController(PageService service, CurrentUserProvider user) {
-		this.service = service;
-		this.user    = user;
-	}
 
 	public Object pages(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size,
 	             @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") String search,

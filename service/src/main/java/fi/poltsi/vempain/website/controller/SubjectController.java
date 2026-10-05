@@ -1,7 +1,8 @@
 package fi.poltsi.vempain.website.controller;
 
-import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository;
 import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
+import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Limit;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,12 +12,9 @@ import java.util.Locale;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 public class SubjectController implements SubjectApi {
 	private final WebSiteSubjectRepository repository;
-
-	public SubjectController(WebSiteSubjectRepository repository) {
-		this.repository = repository;
-	}
 
 	public List<SubjectResponse> autocomplete(@RequestParam(defaultValue = "") String q) {
 		return repository.autocomplete("%" + q.trim()

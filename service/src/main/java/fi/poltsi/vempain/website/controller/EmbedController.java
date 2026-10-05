@@ -7,6 +7,7 @@ import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.repository.WebSitePageRepository;
 import fi.poltsi.vempain.website.service.PublishedDataService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,20 +18,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 public class EmbedController implements EmbedApi {
 	private final PublishedDataService     data;
 	private final WebSitePageRepository    pages;
 	private final WebSiteFileRepository    files;
 	private final WebSiteGalleryRepository galleries;
 	private final CurrentUserProvider      user;
-
-	public EmbedController(PublishedDataService data, WebSitePageRepository pages, WebSiteFileRepository files, WebSiteGalleryRepository galleries, CurrentUserProvider user) {
-		this.data      = data;
-		this.pages     = pages;
-		this.files     = files;
-		this.galleries = galleries;
-		this.user      = user;
-	}
 
 	public Object music(@PathVariable String id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "25") int perPage, @RequestParam(defaultValue = "artist") String sortBy, @RequestParam(
 			defaultValue = "asc") String direction, @RequestParam(defaultValue = "") String search) {

@@ -1,7 +1,6 @@
 package fi.poltsi.vempain.website.auth;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -10,9 +9,8 @@ import org.springframework.stereotype.Component;
  * hashes produced by the PHP native password hasher, so only bcrypt is accepted here.
  */
 @Component
+@Slf4j
 public class PasswordVerifier {
-
-	private static final Logger LOG = LoggerFactory.getLogger(PasswordVerifier.class);
 
 	private final BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
 
@@ -22,7 +20,7 @@ public class PasswordVerifier {
 		}
 
 		if (!storedHash.startsWith("$2")) {
-			LOG.warn("Stored password hash uses an unsupported scheme, refusing the login");
+			log.warn("Stored password hash uses an unsupported scheme, refusing the login");
 			return false;
 		}
 

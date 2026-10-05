@@ -3,6 +3,7 @@ package fi.poltsi.vempain.website.controller;
 import fi.poltsi.vempain.website.controller.dto.response.SubjectSearchResponse;
 import fi.poltsi.vempain.website.service.PageService;
 import fi.poltsi.vempain.website.service.SubjectSearchService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -10,14 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 public class SubjectSearchController implements SubjectSearchApi {
 	private final PageService pages;
 	private final SubjectSearchService subjectSearch;
-
-	public SubjectSearchController(PageService pages, SubjectSearchService subjectSearch) {
-		this.pages = pages;
-		this.subjectSearch = subjectSearch;
-	}
 
 	public Object search(@RequestBody(required = false) Map<String, Object> body) {
 		return pages.list(intVal(body, "page", 0), intVal(body, "size", 12), "asc", String.valueOf(body == null ? "" : body.getOrDefault("search", "")), null, -1);

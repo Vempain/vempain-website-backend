@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.exception;
 
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
  */
 public class ApiException extends RuntimeException {
 
+	@Getter
 	private final HttpStatus status;
 
 	public ApiException(HttpStatus status, String message) {
@@ -29,9 +31,5 @@ public class ApiException extends RuntimeException {
 
 	public static ApiException notFound(String message) {
 		return new ApiException(HttpStatus.NOT_FOUND, message);
-	}
-
-	public HttpStatus getStatus() {
-		return status;
 	}
 }

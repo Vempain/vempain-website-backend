@@ -6,12 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 /**
  * A subject (tag). The localised columns keep the legacy naming of the site database.
  */
 @Entity
 @Table(name = "web_site_subject")
+@Getter
 public class WebSiteSubject {
 
 	@Id
@@ -36,32 +38,4 @@ public class WebSiteSubject {
 
 	@Column(name = "subject_se")
 	private String subjectSe;
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getSubject() {
-		return subject;
-	}
-
-	public String getSubjectDe() {
-		return subjectDe;
-	}
-
-	public String getSubjectEn() {
-		return subjectEn;
-	}
-
-	public String getSubjectEs() {
-		return subjectEs;
-	}
-
-	public String getSubjectFi() {
-		return subjectFi;
-	}
-
-	public String getSubjectSe() {
-		return subjectSe;
-	}
 }

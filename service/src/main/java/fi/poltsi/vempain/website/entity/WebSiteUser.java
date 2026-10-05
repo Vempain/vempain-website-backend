@@ -6,11 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "web_site_users")
+@Getter
 public class WebSiteUser {
 
 	@Id
@@ -18,9 +21,11 @@ public class WebSiteUser {
 	@Column(name = "id")
 	private Long id;
 
+	@Setter
 	@Column(name = "username", nullable = false, length = 255)
 	private String username;
 
+	@Setter
 	@Column(name = "password_hash", nullable = false, length = 255)
 	private String passwordHash;
 
@@ -38,44 +43,4 @@ public class WebSiteUser {
 
 	@Column(name = "global_permission", nullable = false)
 	private boolean globalPermission;
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getPasswordHash() {
-		return passwordHash;
-	}
-
-	public void setPasswordHash(String passwordHash) {
-		this.passwordHash = passwordHash;
-	}
-
-	public Long getCreator() {
-		return creator;
-	}
-
-	public LocalDateTime getCreated() {
-		return created;
-	}
-
-	public Long getModifier() {
-		return modifier;
-	}
-
-	public LocalDateTime getModified() {
-		return modified;
-	}
-
-	public boolean isGlobalPermission() {
-		return globalPermission;
-	}
 }

@@ -1,5 +1,7 @@
 package fi.poltsi.vempain.website.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
  * existing deployment can be switched over without changing the compose environment.
  */
 @ConfigurationProperties(prefix = "vempain.site")
+@Getter
+@Setter
 public class SiteProperties {
 
 	/**
@@ -42,52 +46,4 @@ public class SiteProperties {
 	 * Origins allowed by the CORS filter; an empty list means "*".
 	 */
 	private List<String> corsAllowedOrigins = new ArrayList<>();
-
-	public String getFilesRoot() {
-		return filesRoot;
-	}
-
-	public void setFilesRoot(String filesRoot) {
-		this.filesRoot = filesRoot;
-	}
-
-	public String getJwtSecret() {
-		return jwtSecret;
-	}
-
-	public void setJwtSecret(String jwtSecret) {
-		this.jwtSecret = jwtSecret;
-	}
-
-	public long getJwtTtlSeconds() {
-		return jwtTtlSeconds;
-	}
-
-	public void setJwtTtlSeconds(long jwtTtlSeconds) {
-		this.jwtTtlSeconds = jwtTtlSeconds;
-	}
-
-	public String getJwtCookieName() {
-		return jwtCookieName;
-	}
-
-	public void setJwtCookieName(String jwtCookieName) {
-		this.jwtCookieName = jwtCookieName;
-	}
-
-	public boolean isJwtCookieSecure() {
-		return jwtCookieSecure;
-	}
-
-	public void setJwtCookieSecure(boolean jwtCookieSecure) {
-		this.jwtCookieSecure = jwtCookieSecure;
-	}
-
-	public List<String> getCorsAllowedOrigins() {
-		return corsAllowedOrigins;
-	}
-
-	public void setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
-		this.corsAllowedOrigins = corsAllowedOrigins;
-	}
 }

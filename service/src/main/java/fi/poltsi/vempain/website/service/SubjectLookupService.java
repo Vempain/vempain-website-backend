@@ -1,9 +1,10 @@
 package fi.poltsi.vempain.website.service;
 
+import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
 import fi.poltsi.vempain.website.entity.WebSiteSubject;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository.SubjectLink;
-import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.function.Function;
  * subject text just like the PHP repository did.
  */
 @Service
+@RequiredArgsConstructor
 public class SubjectLookupService {
 
 	private static final Comparator<WebSiteSubject> BY_SUBJECT =
@@ -29,10 +31,6 @@ public class SubjectLookupService {
 			                     String.CASE_INSENSITIVE_ORDER);
 
 	private final WebSiteSubjectRepository subjectRepository;
-
-	public SubjectLookupService(WebSiteSubjectRepository subjectRepository) {
-		this.subjectRepository = subjectRepository;
-	}
 
 	public List<SubjectResponse> forPage(Long pageId) {
 		return forSingle(pageId, subjectRepository::findPageSubjectLinks);

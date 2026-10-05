@@ -6,11 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "web_site_gallery")
+@Getter
 public class WebSiteGallery {
 
 	@Id
@@ -44,40 +46,4 @@ public class WebSiteGallery {
 
 	@Column(name = "modified")
 	private LocalDateTime modified;
-
-	public Long getId() {
-		return id;
-	}
-
-	public Long getGalleryId() {
-		return galleryId;
-	}
-
-	public Long getAclId() {
-		return aclId;
-	}
-
-	public String getShortname() {
-		return shortname;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public Long getCreator() {
-		return creator;
-	}
-
-	public LocalDateTime getCreated() {
-		return created;
-	}
-
-	public Long getModifier() {
-		return modifier;
-	}
-
-	public LocalDateTime getModified() {
-		return modified;
-	}
 }

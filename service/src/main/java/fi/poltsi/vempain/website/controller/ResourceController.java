@@ -9,6 +9,7 @@ import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.service.ResourceAccessService;
 import fi.poltsi.vempain.website.service.SubjectLookupService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequiredArgsConstructor
 public class ResourceController implements ResourceApi {
 	private final WebSiteFileRepository                           files;
 	private final WebSiteGalleryRepository                        galleries;
@@ -35,16 +37,6 @@ public class ResourceController implements ResourceApi {
 	private final ResourceAccessService                           access;
 	private final CurrentUserProvider                             user;
 	private final fi.poltsi.vempain.website.config.SiteProperties props;
-
-	public ResourceController(WebSiteFileRepository f, WebSiteGalleryRepository g, SubjectLookupService s,
-	                          ResourceAccessService a, CurrentUserProvider u, fi.poltsi.vempain.website.config.SiteProperties p) {
-		files     = f;
-		galleries = g;
-		subjects  = s;
-		access    = a;
-		user      = u;
-		props     = p;
-	}
 
 	private Map<String, Object> file(WebSiteFile f) {
 		Map<String, Object> m = new LinkedHashMap<>();

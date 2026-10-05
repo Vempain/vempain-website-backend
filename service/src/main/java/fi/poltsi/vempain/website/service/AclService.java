@@ -3,18 +3,15 @@ package fi.poltsi.vempain.website.service;
 import fi.poltsi.vempain.website.auth.AuthenticatedUser;
 import fi.poltsi.vempain.website.auth.JwtService;
 import fi.poltsi.vempain.website.repository.WebSiteAclRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AclService {
 
 	private final WebSiteAclRepository aclRepository;
 	private final JwtService           jwtService;
-
-	public AclService(WebSiteAclRepository aclRepository, JwtService jwtService) {
-		this.aclRepository = aclRepository;
-		this.jwtService    = jwtService;
-	}
 
 	/**
 	 * Decides whether the caller may see a resource protected by the given ACL. In

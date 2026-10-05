@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +15,9 @@ import java.util.Set;
  * Read-only access to publisher-created embed tables. Identifiers are strictly validated.
  */
 @Service
+@RequiredArgsConstructor
 public class PublishedDataService {
 	private final JdbcTemplate jdbc;
-
-	public PublishedDataService(JdbcTemplate jdbc) {
-		this.jdbc = jdbc;
-	}
 
 	private String table(String id) {
 		if (id == null || !id.matches("[a-z][a-z0-9_]*")) {

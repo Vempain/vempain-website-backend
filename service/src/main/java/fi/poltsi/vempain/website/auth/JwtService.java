@@ -4,8 +4,8 @@ import fi.poltsi.vempain.website.config.SiteProperties;
 import fi.poltsi.vempain.website.entity.WebSiteJwtToken;
 import fi.poltsi.vempain.website.exception.TokenExpiredException;
 import fi.poltsi.vempain.website.repository.WebSiteJwtTokenRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
@@ -28,9 +28,9 @@ import java.util.Optional;
  * intentionally self contained so that no JWT library is needed.
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class JwtService {
-
-	private static final Logger LOG = LoggerFactory.getLogger(JwtService.class);
 
 	private static final String HMAC_ALGORITHM = "HmacSHA256";
 	private static final String HEADER_JSON    = "{\"typ\":\"JWT\",\"alg\":\"HS256\"}";
@@ -38,14 +38,6 @@ public class JwtService {
 	private final WebSiteJwtTokenRepository jwtTokenRepository;
 	private final SiteProperties            siteProperties;
 	private final ObjectMapper              objectMapper;
-
-	public JwtService(WebSiteJwtTokenRepository jwtTokenRepository,
-	                  SiteProperties siteProperties,
-	                  ObjectMapper objectMapper) {
-		this.jwtTokenRepository = jwtTokenRepository;
-		this.siteProperties     = siteProperties;
-		this.objectMapper       = objectMapper;
-	}
 
 	private static long longClaim(Object value, long fallback) {
 		if (value instanceof Number number) {
@@ -116,7 +108,7 @@ public class JwtService {
 			byte[] provided = Base64.getUrlDecoder()
 			                        .decode(parts[2]);
 			if (!MessageDigest.isEqual(expected, provided)) {
-				LOG.debug("Rejected a token with an invalid signature");
+				log.debug("Rejected a token with an invalid signature");
 				return Optional.empty();
 			}
 
@@ -139,7 +131,7 @@ public class JwtService {
 		} catch (TokenExpiredException expired) {
 			throw expired;
 		} catch (RuntimeException | GeneralSecurityException failure) {
-			LOG.debug("Ignoring a malformed token: {}", failure.getMessage());
+			log.debug("Ignoring a malformed token: {}", failure.getMessage());
 			return Optional.empty();
 		}
 	}

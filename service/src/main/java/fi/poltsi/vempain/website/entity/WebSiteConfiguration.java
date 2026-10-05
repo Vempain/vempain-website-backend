@@ -6,9 +6,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 @Entity
 @Table(name = "web_site_configuration")
+@Getter
 public class WebSiteConfiguration {
 
 	@Id
@@ -27,24 +29,4 @@ public class WebSiteConfiguration {
 
 	@Column(name = "config_value", nullable = false)
 	private String configValue;
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getConfigKey() {
-		return configKey;
-	}
-
-	public String getConfigType() {
-		return configType;
-	}
-
-	public String getConfigDefault() {
-		return configDefault;
-	}
-
-	public String getConfigValue() {
-		return configValue;
-	}
 }

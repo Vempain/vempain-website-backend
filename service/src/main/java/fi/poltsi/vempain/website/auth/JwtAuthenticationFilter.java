@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
@@ -22,15 +23,11 @@ import java.util.Optional;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService       jwtService;
 	private final AuthCookieWriter cookieWriter;
-
-	public JwtAuthenticationFilter(JwtService jwtService, AuthCookieWriter cookieWriter) {
-		this.jwtService   = jwtService;
-		this.cookieWriter = cookieWriter;
-	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request,

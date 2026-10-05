@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "web_site_jwt_token")
+@Getter
+@NoArgsConstructor
 public class WebSiteJwtToken {
 
 	@Id
@@ -37,38 +41,11 @@ public class WebSiteJwtToken {
 	@Column(name = "expires", nullable = false)
 	private LocalDateTime expiresAt;
 
-	public WebSiteJwtToken() {
-	}
-
 	public WebSiteJwtToken(Long userId, String token, LocalDateTime created, LocalDateTime expiresAt) {
 		this.userId    = userId;
 		this.token     = token;
 		this.creator   = userId;
 		this.created   = created;
 		this.expiresAt = expiresAt;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public Long getUserId() {
-		return userId;
-	}
-
-	public String getToken() {
-		return token;
-	}
-
-	public Long getCreator() {
-		return creator;
-	}
-
-	public LocalDateTime getCreated() {
-		return created;
-	}
-
-	public LocalDateTime getExpiresAt() {
-		return expiresAt;
 	}
 }

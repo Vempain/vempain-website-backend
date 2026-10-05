@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
  */
 @Entity
 @Table(name = "web_gps_location")
+@Getter
 public class WebGpsLocation {
 
 	@Id
@@ -54,56 +56,4 @@ public class WebGpsLocation {
 
 	@Column(name = "sub_location", length = 255)
 	private String subLocation;
-
-	public Long getId() {
-		return id;
-	}
-
-	public BigDecimal getLatitude() {
-		return latitude;
-	}
-
-	public String getLatitudeRef() {
-		return latitudeRef;
-	}
-
-	public BigDecimal getLongitude() {
-		return longitude;
-	}
-
-	public String getLongitudeRef() {
-		return longitudeRef;
-	}
-
-	public Double getAltitude() {
-		return altitude;
-	}
-
-	public Double getDirection() {
-		return direction;
-	}
-
-	public Integer getSatelliteCount() {
-		return satelliteCount;
-	}
-
-	public String getCountry() {
-		return country;
-	}
-
-	public String getState() {
-		return state;
-	}
-
-	public String getCity() {
-		return city;
-	}
-
-	public String getStreet() {
-		return street;
-	}
-
-	public String getSubLocation() {
-		return subLocation;
-	}
 }

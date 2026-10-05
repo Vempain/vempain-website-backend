@@ -1,7 +1,6 @@
 package fi.poltsi.vempain.website.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -13,9 +12,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class ApiExceptionHandler {
-
-	private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
 	@ExceptionHandler(ApiException.class)
 	ResponseEntity<Map<String, String>> handleApiException(ApiException exception) {
@@ -47,7 +45,7 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	ResponseEntity<Map<String, String>> handleUnexpected(Exception exception) {
-		LOG.error("Unhandled failure while serving a request", exception);
+		log.error("Unhandled failure while serving a request", exception);
 
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 		                     .body(Map.of("error", "Internal server error"));

@@ -1,16 +1,13 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+	id 'java'
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
+	alias(libs.plugins.freefair.lombok)
 	id 'jacoco'
 }
 
 group = 'fi.poltsi.vempain'
 version = libs.versions.release.get()
-
-bootJar {
-	archiveFileName = "${rootProject.name}-${version}.jar"
-}
 
 description = 'Vempain Website public backend (Spring Boot rewrite of the PHP backend)'
 
@@ -21,7 +18,7 @@ java {
 
 dependencies {
     implementation project(':api')
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.security:spring-security-crypto'
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${libs.versions.springdoc.get()}"
@@ -35,21 +32,6 @@ dependencies {
 
 repositories {
 	mavenCentral()
-	maven {
-		url = "https://maven.pkg.github.com/Vempain/vempain-auth"
-		credentials {
-			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-			password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
-		}
-	}
-	maven {
-		url = "https://maven.pkg.github.com/Vempain/vempain-admin-backend-api"
-		credentials {
-			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-			password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
-		}
-	}
-	maven { url = 'https://repo.spring.io/milestone' }
 }
 
 jacocoTestReport {
@@ -65,7 +47,7 @@ jacocoTestCoverageVerification {
 	violationRules {
 		rule {
 			element = 'PACKAGE'
-			includes = ['fi.poltsi.vempain.file.service.files']
+			includes = ['fi.poltsi.vempain.website.service']
 			limit {
 				counter = 'LINE'
 				value = 'COVEREDRATIO'
@@ -76,10 +58,7 @@ jacocoTestCoverageVerification {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
-    include '**/*UTC.class'
-    include '**/*ITC.class'
-    include '**/*CTC.class'
+	useJUnitPlatform()
 }
 
 tasks.named('bootJar') {

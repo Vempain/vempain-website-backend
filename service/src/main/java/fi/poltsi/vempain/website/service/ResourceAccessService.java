@@ -3,6 +3,7 @@ package fi.poltsi.vempain.website.service;
 import fi.poltsi.vempain.website.auth.AuthenticatedUser;
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.exception.ApiException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -14,15 +15,11 @@ import java.util.Optional;
  * on the list gets a 403.
  */
 @Service
+@RequiredArgsConstructor
 public class ResourceAccessService {
 
 	private final AclService          aclService;
 	private final CurrentUserProvider currentUserProvider;
-
-	public ResourceAccessService(AclService aclService, CurrentUserProvider currentUserProvider) {
-		this.aclService          = aclService;
-		this.currentUserProvider = currentUserProvider;
-	}
 
 	public Optional<HttpStatus> deniedStatus(Long aclId) {
 		if (aclId == null || aclId == 0L) {

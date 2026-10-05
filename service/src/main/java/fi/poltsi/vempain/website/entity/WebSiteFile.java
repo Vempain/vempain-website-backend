@@ -6,11 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 
 import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "web_site_file")
+@Getter
 public class WebSiteFile {
 
 	@Id
@@ -80,88 +82,4 @@ public class WebSiteFile {
 
 	@Column(name = "thumbnail_path")
 	private String thumbnailPath;
-
-	public Long getId() {
-		return id;
-	}
-
-	public Long getFileId() {
-		return fileId;
-	}
-
-	public Long getAclId() {
-		return aclId;
-	}
-
-	public String getComment() {
-		return comment;
-	}
-
-	public String getFilePath() {
-		return filePath;
-	}
-
-	public String getMimetype() {
-		return mimetype;
-	}
-
-	public OffsetDateTime getOriginalDateTime() {
-		return originalDateTime;
-	}
-
-	public String getRightsHolder() {
-		return rightsHolder;
-	}
-
-	public String getRightsTerms() {
-		return rightsTerms;
-	}
-
-	public String getRightsUrl() {
-		return rightsUrl;
-	}
-
-	public String getCreatorName() {
-		return creatorName;
-	}
-
-	public String getCreatorEmail() {
-		return creatorEmail;
-	}
-
-	public String getCreatorCountry() {
-		return creatorCountry;
-	}
-
-	public String getCreatorUrl() {
-		return creatorUrl;
-	}
-
-	public Long getLocationId() {
-		return locationId;
-	}
-
-	public Long getWidth() {
-		return width;
-	}
-
-	public Long getHeight() {
-		return height;
-	}
-
-	public Long getLength() {
-		return length;
-	}
-
-	public Long getPages() {
-		return pages;
-	}
-
-	public String getMetadata() {
-		return metadata;
-	}
-
-	public String getThumbnailPath() {
-		return thumbnailPath;
-	}
 }

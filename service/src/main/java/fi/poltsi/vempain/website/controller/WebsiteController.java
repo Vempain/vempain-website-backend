@@ -3,16 +3,14 @@ package fi.poltsi.vempain.website.controller;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiException;
 import fi.poltsi.vempain.website.service.PageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class WebsiteController implements WebsiteApi {
 	private final PageService pages;
-
-	public WebsiteController(PageService p) {
-		pages = p;
-	}
 
 	public Object page(@PathVariable(required = false) String path) {
 		String p = path == null || path.isBlank() ? "index" : path;
