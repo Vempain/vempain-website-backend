@@ -197,8 +197,17 @@ public class PublishedDataService {
 									   .build();
 	}
 
+	private static final Set<String> ALLOWED_IDENTIFIERS = Set.of(
+			// Keep this list in sync with published embed datasets
+			"music",
+			"gps"
+	);
+
 	private String table(String id) {
 		if (id == null || !id.matches("[a-z][a-z0-9_]*")) {
+			throw new IllegalArgumentException("Invalid data set identifier");
+		}
+		if (!ALLOWED_IDENTIFIERS.contains(id)) {
 			throw new IllegalArgumentException("Invalid data set identifier");
 		}
 		String table = "website_data__" + id;
