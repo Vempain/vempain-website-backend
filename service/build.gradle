@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
 	id 'jacoco'
+	alias(libs.plugins.freefair.lombok)
 }
 
 group = 'fi.poltsi.vempain'

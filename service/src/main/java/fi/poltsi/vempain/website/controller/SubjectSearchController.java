@@ -1,57 +1,47 @@
 package fi.poltsi.vempain.website.controller;
 
-import fi.poltsi.vempain.website.controller.dto.response.SubjectSearchResponse;
+import fi.poltsi.vempain.website.api.request.SubjectIdSearchRequest;
+import fi.poltsi.vempain.website.api.request.SubjectSearchRequest;
+import fi.poltsi.vempain.website.api.response.PagedResponse;
+import fi.poltsi.vempain.website.api.response.SubjectSearchResponse;
+import fi.poltsi.vempain.website.api.response.WebSitePageResponse;
+import fi.poltsi.vempain.website.auth.AuthenticatedUser;
 import fi.poltsi.vempain.website.service.PageService;
 import fi.poltsi.vempain.website.service.SubjectSearchService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
+/**
+ * Public search controls. Both endpoints search as the anonymous user, so only public content is returned.
+ */
 @RestController
+@RequiredArgsConstructor
 public class SubjectSearchController implements SubjectSearchApi {
+	private static final int DEFAULT_PAGE_SIZE = 12;
+
 	private final PageService pages;
 	private final SubjectSearchService subjectSearch;
 
-	public SubjectSearchController(PageService pages, SubjectSearchService subjectSearch) {
-		this.pages = pages;
-		this.subjectSearch = subjectSearch;
+	public PagedResponse<WebSitePageResponse> search(@RequestBody(required = false) SubjectSearchRequest request) {
+		SubjectSearchRequest criteria = request == null ? new SubjectSearchRequest() : request;
+		return pages.list(valueOrDefault(criteria.getPage(), 0), valueOrDefault(criteria.getSize(), DEFAULT_PAGE_SIZE), "asc",
+						  criteria.getSearch() == null ? "" : criteria.getSearch(), null, AuthenticatedUser.ANONYMOUS_USER_ID);
 	}
 
-	public Object search(@RequestBody(required = false) Map<String, Object> body) {
-		return pages.list(intVal(body, "page", 0), intVal(body, "size", 12), "asc", String.valueOf(body == null ? "" : body.getOrDefault("search", "")), null, -1);
+	public SubjectSearchResponse searchIds(@RequestBody(required = false) SubjectIdSearchRequest request) {
+		SubjectIdSearchRequest criteria = request == null ? new SubjectIdSearchRequest() : request;
+		List<Long> subjectIds = criteria.getSubjectIds() == null ? List.of() : criteria.getSubjectIds()
+																					   .stream()
+																					   .filter(id -> id != null && id > 0)
+																					   .toList();
+		return subjectSearch.search(subjectIds, valueOrDefault(criteria.getPage(), 0), valueOrDefault(criteria.getSize(), DEFAULT_PAGE_SIZE),
+									AuthenticatedUser.ANONYMOUS_USER_ID);
 	}
 
-	public SubjectSearchResponse searchIds(@RequestBody(required = false) Map<String, Object> body) {
-		return subjectSearch.search(longList(body, "subject_ids"), intVal(body, "page", 0), intVal(body, "size", 12), -1);
-	}
-
-	private List<Long> longList(Map<String, Object> body, String key) {
-		if (body == null || !(body.get(key) instanceof List<?> values)) {
-			return List.of();
-		}
-		return values.stream()
-		             .map(value -> {
-						 try {
-							 return Long.parseLong(value.toString());
-						 } catch (NumberFormatException ignored) {
-							 return null;
-						 }
-					 })
-		             .filter(value -> value != null && value > 0)
-		             .toList();
-	}
-
-	private int intVal(Map<String, Object> b, String k, int d) {
-		if (b == null || b.get(k) == null) {
-			return d;
-		}
-		try {
-			return Integer.parseInt(b.get(k)
-			                         .toString());
-		} catch (Exception e) {
-			return d;
-		}
+	private static int valueOrDefault(Integer value, int defaultValue) {
+		return value == null ? defaultValue : value;
 	}
 }

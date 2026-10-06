@@ -1,7 +1,14 @@
 package fi.poltsi.vempain.website.controller;
 
-import fi.poltsi.vempain.website.controller.dto.response.SubjectSearchResponse;
+import fi.poltsi.vempain.website.api.request.SubjectIdSearchRequest;
+import fi.poltsi.vempain.website.api.request.SubjectSearchRequest;
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
+import fi.poltsi.vempain.website.api.response.PagedResponse;
+import fi.poltsi.vempain.website.api.response.SubjectSearchResponse;
+import fi.poltsi.vempain.website.api.response.WebSitePageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -9,10 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.Map;
-
 /**
- * REST contract for subject-based page searches.
+ * REST contract for subject-based searches.
  */
 @Tag(name = "Subject search", description = "Search endpoints used by public subject controls")
 public interface SubjectSearchApi {
@@ -20,34 +25,40 @@ public interface SubjectSearchApi {
 	String BASE_PATH = "/api/public";
 
 	/**
-	 * Searches pages by subject text.
+	 * Searches pages by free text.
 	 *
-	 * @param body search criteria
-	 * @return matching pages
+	 * @param request search criteria, every field is optional
+	 * @return matching page summaries
 	 */
 	@PostMapping(path = BASE_PATH + "/subject-search", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(summary = "Search pages by subject text")
+	@Operation(summary = "Search pages by text", description = "Returns a page of page summaries (PagedResponse of WebSitePageResponse)")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Search results returned"),
-			@ApiResponse(responseCode = "400", description = "Invalid search request"),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error")
+			@ApiResponse(responseCode = "200", description = "Search results returned",
+						 content = @Content(schema = @Schema(implementation = PagedResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "400", description = "Malformed search request",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	Object search(@RequestBody(required = false) Map<String, Object> body);
+	PagedResponse<WebSitePageResponse> search(@RequestBody(required = false) SubjectSearchRequest request);
 
 	/**
-	 * Searches pages linked to subjects.
+	 * Searches pages, galleries and files linked to the given subjects.
 	 *
-	 * @param body search criteria
-	 * @return matching pages
+	 * @param request search criteria, every field is optional
+	 * @return matching pages, galleries and files
 	 */
 	@PostMapping(path = BASE_PATH + "/subjects/search", consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(summary = "Search subject-linked pages")
+	@Operation(summary = "Search subject-linked resources")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Subject search results returned"),
-			@ApiResponse(responseCode = "400", description = "Invalid search request"),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error")
+			@ApiResponse(responseCode = "200", description = "Subject search results returned",
+						 content = @Content(schema = @Schema(implementation = SubjectSearchResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "400", description = "Malformed search request",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	SubjectSearchResponse searchIds(@RequestBody(required = false) Map<String, Object> body);
+	SubjectSearchResponse searchIds(@RequestBody(required = false) SubjectIdSearchRequest request);
 }

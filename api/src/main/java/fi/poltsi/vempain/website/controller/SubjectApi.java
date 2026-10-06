@@ -1,7 +1,12 @@
 package fi.poltsi.vempain.website.controller;
 
-import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
+import fi.poltsi.vempain.website.api.response.SubjectResponse;
+import fi.poltsi.vempain.website.api.response.WordCloudEntryResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST contract for subject-related endpoints.
@@ -29,8 +33,11 @@ public interface SubjectApi {
 	@GetMapping(path = BASE_PATH + "/subjects/autocomplete", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Autocomplete subjects")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Matching subjects returned"),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error")
+			@ApiResponse(responseCode = "200", description = "Matching subjects returned",
+						 content = @Content(array = @ArraySchema(schema = @Schema(implementation =
+								 SubjectResponse.class)), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
 	List<SubjectResponse> autocomplete(@RequestParam(defaultValue = "") String q);
 
@@ -43,9 +50,13 @@ public interface SubjectApi {
 	@GetMapping(path = BASE_PATH + "/embeds/word-cloud", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get subject word cloud")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Word-cloud terms returned"),
-			@ApiResponse(responseCode = "400", description = "Invalid result count"),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error")
+			@ApiResponse(responseCode = "200", description = "Word-cloud terms returned",
+						 content = @Content(array = @ArraySchema(schema = @Schema(implementation =
+								 WordCloudEntryResponse.class)), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "400", description = "Invalid result count",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	List<Map<String, Object>> wordCloud(@RequestParam(defaultValue = "50") int count);
+	List<WordCloudEntryResponse> wordCloud(@RequestParam(defaultValue = "50") int count);
 }

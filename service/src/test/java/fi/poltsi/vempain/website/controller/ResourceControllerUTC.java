@@ -1,12 +1,13 @@
 package fi.poltsi.vempain.website.controller;
 
+import fi.poltsi.vempain.website.api.response.WebSiteFileResponse;
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.config.SiteProperties;
 import fi.poltsi.vempain.website.entity.WebSiteFile;
 import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.service.ResourceAccessService;
-import fi.poltsi.vempain.website.service.SubjectLookupService;
+import fi.poltsi.vempain.website.service.ResponseMapperService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,12 +32,12 @@ import static org.mockito.Mockito.when;
 class ResourceControllerUTC {
 	private final WebSiteFileRepository files = mock(WebSiteFileRepository.class);
 	private final WebSiteGalleryRepository galleries = mock(WebSiteGalleryRepository.class);
-	private final SubjectLookupService subjects = mock(SubjectLookupService.class);
+	private final ResponseMapperService mapper  = mock(ResponseMapperService.class);
 	private final ResourceAccessService access = mock(ResourceAccessService.class);
 	private final CurrentUserProvider user = mock(CurrentUserProvider.class);
 	private final SiteProperties properties = new SiteProperties();
 	private final ResourceController controller =
-			new ResourceController(files, galleries, subjects, access, user, properties);
+			new ResourceController(files, galleries, mapper, access, user, properties);
 
 	@Test
 	void publicApiPathStreamsFileContent(@TempDir Path root) throws Exception {
@@ -79,11 +79,15 @@ class ResourceControllerUTC {
 		WebSiteFile entity = fileEntity("image/photo.jpg", "image/jpeg", 66812L);
 		when(entity.getFileId()).thenReturn(72758L);
 		when(files.findByFileId(72758L)).thenReturn(Optional.of(entity));
+		when(mapper.file(entity)).thenReturn(WebSiteFileResponse.builder()
+																.fileId(72758L)
+																.filePath("image/photo.jpg")
+																.build());
 
-		Map<?, ?> response = (Map<?, ?>) controller.fileById(72758L);
+		WebSiteFileResponse response = controller.fileById(72758L);
 
-		assertEquals(72758L, response.get("file_id"));
-		assertEquals("image/photo.jpg", response.get("file_path"));
+		assertEquals(72758L, response.getFileId());
+		assertEquals("image/photo.jpg", response.getFilePath());
 		verify(files).findByFileId(72758L);
 		verify(access).requireAccess(66812L);
 		verify(files, never()).findById(72758L);

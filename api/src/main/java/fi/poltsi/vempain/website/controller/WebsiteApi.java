@@ -1,6 +1,10 @@
 package fi.poltsi.vempain.website.controller;
 
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
+import fi.poltsi.vempain.website.api.response.WebSitePageResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,10 +29,16 @@ public interface WebsiteApi {
 	@GetMapping(path = {BASE_PATH + "/", BASE_PATH + "/{path:.+}"}, produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Render a website page")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Website page returned"),
-			@ApiResponse(responseCode = "403", description = "Page access denied"),
-			@ApiResponse(responseCode = "404", description = "Page not found"),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error")
+			@ApiResponse(responseCode = "200", description = "Website page returned",
+						 content = @Content(schema = @Schema(implementation = WebSitePageResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "401", description = "Authentication required",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "403", description = "Page access denied",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "404", description = "Page not found",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "500", description = "Unexpected server error",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	Object page(@PathVariable(required = false) String path);
+	WebSitePageResponse page(@PathVariable(required = false) String path);
 }
