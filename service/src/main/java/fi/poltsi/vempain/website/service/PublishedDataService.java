@@ -200,13 +200,16 @@ public class PublishedDataService {
 	private static final Set<String> ALLOWED_IDENTIFIERS = Set.of(
 			// Keep this list in sync with published embed datasets
 			"music",
-			"gps"
-	);
-
-	private String table(String id) {
+		String requestedTable = "website_data__" + id;
+		String resolvedTable = jdbc.queryForObject(
+				"select table_name from information_schema.tables where table_schema=current_schema() and table_name=?",
+				String.class,
+				requestedTable
+		);
+		if (resolvedTable == null) {
 		if (id == null || !id.matches("[a-z][a-z0-9_]*")) {
 			throw new IllegalArgumentException("Invalid data set identifier");
-		}
+		return quoteIdentifier(resolvedTable);
 		if (!ALLOWED_IDENTIFIERS.contains(id)) {
 			throw new IllegalArgumentException("Invalid data set identifier");
 		}
