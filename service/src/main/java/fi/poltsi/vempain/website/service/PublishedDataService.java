@@ -136,15 +136,14 @@ public class PublishedDataService {
 	}
 
 	public GpsClustersResponse gpsClusters(String id, int zoom, Double minLat, Double maxLat, Double minLng, Double maxLng) {
-		final String tableName = table(id);
-		int          z         = clampZoom(zoom);
-		double       latStep   = latStep(z), lngStep = lngStep(z);
-		final String sql       = "select floor((" + LAT + "+90)/?) lat_bucket,floor((" + LNG + "+180)/?) lng_bucket,count(*) point_count,avg(" + LAT + ") latitude,avg(" + LNG
-								 + ") longitude,min(" + LAT + ") min_latitude,max(" + LAT + ") max_latitude,min(" + LNG + ") min_longitude,max(" + LNG
-								 + ") max_longitude,min(timestamp) first_timestamp,max(timestamp) last_timestamp,min(filename) sample_filename from " + tableName + HAS_COORDS
-								 + " and " + LAT + " between ? and ? and " + LNG + " between ? and ? group by 1,2 order by point_count desc limit 1000";
+		String table   = table(id);
+		int    z       = clampZoom(zoom);
+		double latStep = latStep(z), lngStep = lngStep(z);
 		List<GpsClusterItemResponse> items = jdbc.query(
-				sql,
+				"select floor((" + LAT + "+90)/?) lat_bucket,floor((" + LNG + "+180)/?) lng_bucket,count(*) point_count,avg(" + LAT + ") latitude,avg(" + LNG
+				+ ") longitude,min(" + LAT + ") min_latitude,max(" + LAT + ") max_latitude,min(" + LNG + ") min_longitude,max(" + LNG
+				+ ") max_longitude,min(timestamp) first_timestamp,max(timestamp) last_timestamp,min(filename) sample_filename from " + table + HAS_COORDS
+				+ " and " + LAT + " between ? and ? and " + LNG + " between ? and ? group by 1,2 order by point_count desc limit 1000",
 				(rs, rowNum) -> {
 					int latBucket = rs.getInt("lat_bucket"), lngBucket = rs.getInt("lng_bucket");
 					long                                     count     = rs.getLong("point_count");
