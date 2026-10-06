@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.auth;
 
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
 import fi.poltsi.vempain.website.exception.TokenExpiredException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,6 +11,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -26,10 +28,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService       jwtService;
 	private final AuthCookieWriter cookieWriter;
+	private final ObjectMapper objectMapper;
 
-	public JwtAuthenticationFilter(JwtService jwtService, AuthCookieWriter cookieWriter) {
+	public JwtAuthenticationFilter(JwtService jwtService, AuthCookieWriter cookieWriter, ObjectMapper objectMapper) {
 		this.jwtService   = jwtService;
 		this.cookieWriter = cookieWriter;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -46,7 +50,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 			response.getWriter()
-			        .write("{\"error\":\"Session expired\",\"code\":\"SESSION_EXPIRED\"}");
+					.write(objectMapper.writeValueAsString(ApiErrorResponse.builder()
+																		   .error("Session expired")
+																		   .code("SESSION_EXPIRED")
+																		   .build()));
 			return;
 		}
 

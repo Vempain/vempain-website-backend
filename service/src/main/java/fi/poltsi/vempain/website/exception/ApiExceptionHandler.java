@@ -1,7 +1,7 @@
 package fi.poltsi.vempain.website.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -10,29 +10,29 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.Map;
-
+/**
+ * Every failure is reported as an {@link ApiErrorResponse} body, which is the shape the frontend expects.
+ */
+@Slf4j
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
-
 	@ExceptionHandler(ApiException.class)
-	ResponseEntity<Map<String, String>> handleApiException(ApiException exception) {
+	ResponseEntity<ApiErrorResponse> handleApiException(ApiException exception) {
 		return ResponseEntity.status(exception.getStatus())
-		                     .body(Map.of("error", exception.getMessage()));
+							 .body(error(exception.getMessage()));
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
-	ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException exception) {
+	ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException exception) {
 		return ResponseEntity.badRequest()
-		                     .body(Map.of("error", exception.getMessage()));
+							 .body(error(exception.getMessage()));
 	}
 
 	@ExceptionHandler(IllegalStateException.class)
-	ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException exception) {
+	ResponseEntity<ApiErrorResponse> handleIllegalState(IllegalStateException exception) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-		                     .body(Map.of("error", exception.getMessage()));
+							 .body(error(exception.getMessage()));
 	}
 
 	@ExceptionHandler({
@@ -40,16 +40,22 @@ public class ApiExceptionHandler {
 			MethodArgumentTypeMismatchException.class,
 			HttpMessageNotReadableException.class
 	})
-	ResponseEntity<Map<String, String>> handleMalformedRequest(Exception exception) {
+	ResponseEntity<ApiErrorResponse> handleMalformedRequest(Exception exception) {
 		return ResponseEntity.badRequest()
-		                     .body(Map.of("error", "Malformed request"));
+							 .body(error("Malformed request"));
 	}
 
 	@ExceptionHandler(Exception.class)
-	ResponseEntity<Map<String, String>> handleUnexpected(Exception exception) {
-		LOG.error("Unhandled failure while serving a request", exception);
+	ResponseEntity<ApiErrorResponse> handleUnexpected(Exception exception) {
+		log.error("Unhandled failure while serving a request", exception);
 
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-		                     .body(Map.of("error", "Internal server error"));
+							 .body(error("Internal server error"));
+	}
+
+	private static ApiErrorResponse error(String message) {
+		return ApiErrorResponse.builder()
+							   .error(message)
+							   .build();
 	}
 }

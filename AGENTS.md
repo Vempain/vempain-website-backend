@@ -8,19 +8,42 @@ treated as a supported implementation.
 
 ## Layout
 
-- `api/`: REST interfaces and DTOs.
+- `api/`: REST interfaces (`controller/*Api.java`) and the request/response DTOs (`api/request`, `api/response`). Published to GitHub
+  Packages as `vempain-website-backend-api`.
 - `service/`: Spring Boot application, controllers, security, services,
   repositories, migrations, and tests.
 - Public runtime paths include `/api`, `/file`, and `/health`.
 
+## REST contracts (DTOs)
+
+- Every endpoint declares a typed body: a `*Response` class (or `PagedResponse<*Response>` /
+  `List<*Response>`) and a `*Request` class for JSON bodies. Never return `Object`, `Map` or
+  hand-built maps from a controller or service; the only `Map` body is the public configuration,
+  which is a genuine key/value set (`Record<string, string>` on the frontend).
+- DTOs follow the admin/file backend style: Lombok `@Data @Builder @NoArgsConstructor
+  @AllArgsConstructor`, `@JsonIgnoreProperties(ignoreUnknown = true)`,
+  `@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)` (Jackson 3, `tools.jackson`),
+  and `@Schema` on the class and on every field. API interfaces document each response code with
+  `@ApiResponse(content = @Content(schema = @Schema(implementation = ...)))`; errors are always
+  `ApiErrorResponse` (`error`, optional `code`).
+- Field names must match the TypeScript models in `vempain-website-frontend/src/models` and
+  `vempain-rt-renderer/src/types.ts` one to one (`WebSitePageResponse` <-> `WebSitePage`, and so
+  on). `api/src/test/.../api/ResponseContractJTC` pins the serialised key set of every DTO; update it
+  together with the frontend model when a field is added.
+- Entities are mapped to DTOs in `service/ResponseMapperService` (pages, files, galleries,
+  locations, embeds) with bulk subject/location lookups; GPS locations are only resolved for
+  authenticated callers. Published data sets are mapped in `PublishedDataService`.
+
 ## Conventions
 
-- Preserve snake_case JSON contracts.
-- Prefer Lombok annotations for applicable Java constructors, accessors,
-  builders, and logging unless they obscure behavior or conflict with Spring.
+- Preserve snake_case JSON contracts (see REST contracts above).
+- Lombok (`io.freefair.lombok`) is enabled in both modules; prefer its annotations for
+  constructors (`@RequiredArgsConstructor`), accessors, builders and logging (`@Slf4j`) unless
+  they obscure behavior or conflict with Spring. Entities are read-only JPA mappings and keep
+  their explicit getters.
 - Keep controllers thin and place business rules in services.
 - Preserve the repository's tab-indented Java formatting.
-- Test suffixes are meaningful: `UTC`, `CTC`, and `ITC`.
+- Test suffixes are meaningful: `UTC`, `CTC`, `ITC`, and `JTC` (JSON contract tests in `api/`).
 
 ## Validation
 

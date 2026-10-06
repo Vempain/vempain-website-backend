@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
 	id 'maven-publish'
+	alias(libs.plugins.freefair.lombok)
 }
 
 description = 'Vempain Website REST API contracts and DTOs'
@@ -30,8 +31,13 @@ tasks.named('javadocJar') {
 dependencies {
     api 'org.springframework:spring-web'
     api 'jakarta.servlet:jakarta.servlet-api'
+	// Jackson 3 (tools.jackson) naming strategies plus the com.fasterxml annotations that are still valid
+	api 'org.springframework.boot:spring-boot-jackson'
     api 'com.fasterxml.jackson.core:jackson-annotations'
     api "io.swagger.core.v3:swagger-annotations:${libs.versions.swagger.get()}"
+
+	testImplementation 'org.junit.jupiter:junit-jupiter'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 // Publish the API module to GitHub Packages when invoked by CI
@@ -73,4 +79,5 @@ publishing {
 
 tasks.named('test') {
     useJUnitPlatform()
+	include '**/*JTC.class'
 }

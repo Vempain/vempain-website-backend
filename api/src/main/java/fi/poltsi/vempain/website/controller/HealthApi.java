@@ -1,13 +1,15 @@
 package fi.poltsi.vempain.website.controller;
 
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
+import fi.poltsi.vempain.website.api.response.StatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import java.util.Map;
 
 /**
  * REST contract for service health checks.
@@ -20,13 +22,15 @@ public interface HealthApi {
 	/**
 	 * Checks service availability.
 	 *
-	 * @return health status values
+	 * @return status acknowledgement
 	 */
 	@GetMapping(path = BASE_PATH + "/health", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Check service health")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Service is available"),
-			@ApiResponse(responseCode = "500", description = "Service health check failed")
+			@ApiResponse(responseCode = "200", description = "Service is available",
+						 content = @Content(schema = @Schema(implementation = StatusResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)),
+			@ApiResponse(responseCode = "500", description = "Service health check failed",
+						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	Map<String, String> health();
+	StatusResponse health();
 }

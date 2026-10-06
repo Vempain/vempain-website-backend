@@ -109,12 +109,16 @@ configuration, not to a legacy PHP bind mount.
 ## Layout
 
 ```
-api/                REST API contracts and shared response DTOs
+api/                REST API contracts (controller/*Api.java) and the request/response DTOs
 service/            Spring Boot application and implementation code
   auth/              JWT issuing/verification, cookie handling, current caller
-  config/             typed configuration and the CORS filter
-  domain/entity/      JPA mappings of the vempain_site tables
-  domain/repository/  Spring Data repositories plus the ported native queries
-  service/            application logic (ACL, pages, files, galleries, search, embeds)
-  web/                REST controller implementations and error handling
+  config/            typed configuration, CORS filter, security headers, OpenAPI
+  controller/        REST controller implementations
+  entity/            JPA mappings of the vempain_site tables
+  repository/        Spring Data repositories plus the ported native queries
+  service/           application logic (ACL, pages, files, galleries, search, embeds, DTO mapping)
+  exception/         ApiException and the ApiErrorResponse controller advice
 ```
+
+Every JSON body is a snake_case DTO from the `api` module that mirrors the matching model in
+`vempain-website-frontend/src/models`; the OpenAPI document lists the schema of every endpoint.

@@ -4,9 +4,15 @@ import fi.poltsi.vempain.website.entity.WebSiteSubject;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository.SubjectLink;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyCollection;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class SubjectLookupServiceUTC {
     private final WebSiteSubjectRepository repository = mock(WebSiteSubjectRepository.class);
@@ -27,7 +33,9 @@ class SubjectLookupServiceUTC {
         when(a.getId()).thenReturn(2L); when(a.getSubject()).thenReturn("Alpha");
         when(repository.findPageSubjectLinks(anyCollection())).thenReturn(List.of(first, second));
         when(repository.findByIdIn(anyCollection())).thenReturn(List.of(z, a));
-        assertEquals("Alpha", service.forPage(8L).get(0).subject());
+		assertEquals("Alpha", service.forPage(8L)
+	                                 .get(0)
+	                                 .getSubject());
         assertEquals(2, service.forPages(List.of(8L, 8L)).get(8L).size());
     }
 }

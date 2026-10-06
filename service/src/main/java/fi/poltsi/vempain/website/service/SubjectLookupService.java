@@ -1,9 +1,9 @@
 package fi.poltsi.vempain.website.service;
 
+import fi.poltsi.vempain.website.api.response.SubjectResponse;
 import fi.poltsi.vempain.website.entity.WebSiteSubject;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository.SubjectLink;
-import fi.poltsi.vempain.website.controller.dto.response.SubjectResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -104,17 +104,25 @@ public class SubjectLookupService {
 		grouped.forEach((resourceId, subjects) -> {
 			subjects.sort(BY_SUBJECT);
 			result.put(resourceId, subjects.stream()
-			                               .map(subject -> new SubjectResponse(
-					                               subject.getId(),
-					                               subject.getSubject(),
-					                               subject.getSubjectDe(),
-					                               subject.getSubjectEn(),
-					                               subject.getSubjectEs(),
-					                               subject.getSubjectFi(),
-					                               subject.getSubjectSe()))
+										   .map(SubjectLookupService::toResponse)
 			                               .toList());
 		});
 
 		return result;
+	}
+
+	/**
+	 * Maps a subject entity to its response DTO.
+	 */
+	public static SubjectResponse toResponse(WebSiteSubject subject) {
+		return SubjectResponse.builder()
+							  .id(subject.getId())
+							  .subject(subject.getSubject())
+							  .subjectDe(subject.getSubjectDe())
+							  .subjectEn(subject.getSubjectEn())
+							  .subjectEs(subject.getSubjectEs())
+							  .subjectFi(subject.getSubjectFi())
+							  .subjectSe(subject.getSubjectSe())
+							  .build();
 	}
 }

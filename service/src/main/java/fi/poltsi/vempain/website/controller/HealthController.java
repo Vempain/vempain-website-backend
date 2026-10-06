@@ -1,8 +1,7 @@
 package fi.poltsi.vempain.website.controller;
 
+import fi.poltsi.vempain.website.api.response.StatusResponse;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * Liveness endpoint used by the container health check and by Traefik.
@@ -10,7 +9,9 @@ import java.util.Map;
 @RestController
 public class HealthController implements HealthApi {
 
-	public Map<String, String> health() {
-		return Map.of("status", "ok");
+	public StatusResponse health() {
+		return StatusResponse.builder()
+							 .status("ok")
+							 .build();
 	}
 }
