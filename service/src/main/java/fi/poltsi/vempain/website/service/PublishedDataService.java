@@ -206,14 +206,7 @@ public class PublishedDataService {
 		if (count == null || count == 0) {
 			throw new IllegalStateException("Published data set not found");
 		}
-		return quoteIdentifier(table);
-	}
-
-	private static String quoteIdentifier(String identifier) {
-		if (identifier == null || !identifier.matches("[a-z0-9_]+")) {
-			throw new IllegalArgumentException("Invalid SQL identifier");
-		}
-		return "\"" + identifier + "\"";
+		return "\"" + table + "\"";
 	}
 
 	private static int clampZoom(int zoom) {
