@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class EmbedController implements EmbedApi {
+	private static final String PUBLISHED_ID_PATTERN = "[a-z][a-z0-9_]*";
+
 	private final PublishedDataService data;
 	private final LastItemsService     lastItems;
 	private final CurrentUserProvider  user;
@@ -25,28 +27,35 @@ public class EmbedController implements EmbedApi {
 	public MusicDataResponse music(@PathVariable String id, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "25") int perPage,
 								   @RequestParam(defaultValue = "artist") String sortBy, @RequestParam(defaultValue = "asc") String direction,
 								   @RequestParam(defaultValue = "") String search) {
-		return data.music(id, page, perPage, sortBy, direction, search);
+		return data.music(validatedPublishedId(id), page, perPage, sortBy, direction, search);
 	}
 
 	public GpsOverviewResponse overview(@PathVariable String id) {
-		return data.gpsOverview(id);
+		return data.gpsOverview(validatedPublishedId(id));
 	}
 
 	public GpsTrackResponse track(@PathVariable String id, @RequestParam(defaultValue = "3000") int maxPoints) {
-		return data.gpsTrack(id, maxPoints);
+		return data.gpsTrack(validatedPublishedId(id), maxPoints);
 	}
 
 	public GpsClustersResponse clusters(@PathVariable String id, @RequestParam(defaultValue = "4") int zoom, @RequestParam(required = false) Double minLat,
 										@RequestParam(required = false) Double maxLat, @RequestParam(required = false) Double minLng,
 										@RequestParam(required = false) Double maxLng) {
-		return data.gpsClusters(id, zoom, minLat, maxLat, minLng, maxLng);
+		return data.gpsClusters(validatedPublishedId(id), zoom, minLat, maxLat, minLng, maxLng);
 	}
 
 	public GpsClusterPointsResponse points(@PathVariable String id, @PathVariable String key, @RequestParam(defaultValue = "250") int limit) {
 		if (!key.matches("\\d+:-?\\d+:-?\\d+")) {
 			throw ApiException.badRequest("Invalid cluster key");
 		}
-		return data.gpsClusterPoints(id, key, limit);
+		return data.gpsClusterPoints(validatedPublishedId(id), key, limit);
+	}
+
+	private String validatedPublishedId(String id) {
+		if (id == null || !id.matches(PUBLISHED_ID_PATTERN)) {
+			throw ApiException.badRequest("Invalid data set identifier");
+		}
+		return id;
 	}
 
 	public LastItemsResponse last(@RequestParam(defaultValue = "") String type, @RequestParam(defaultValue = "5") int count) {
