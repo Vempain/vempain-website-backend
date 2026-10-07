@@ -108,6 +108,20 @@ class PageControllerCTC {
 	}
 
 	@Test
+	void overlongSearchParameterIsRejected() throws Exception {
+		when(user.currentUserId()).thenReturn(-1L);
+		when(pages.list(anyInt(), anyInt(), anyString(), anyString(), any(), anyLong())).thenReturn(PagedResponse.of(List.of(), 0, 12, 0));
+
+		mvc.perform(get("/api/public/pages").param("search", "a".repeat(201)))
+		   .andExpect(status().isBadRequest())
+		   .andExpect(content().json("""
+											 {"error":"Invalid request"}
+											 """));
+		mvc.perform(get("/api/pages").param("search", "a".repeat(200)))
+		   .andExpect(status().isOk());
+	}
+
+	@Test
 	void pageRoutesRejectMissingOrWrongInput() throws Exception {
 		mvc.perform(get("/api/public/page-content"))
 		   .andExpect(status().is4xxClientError());

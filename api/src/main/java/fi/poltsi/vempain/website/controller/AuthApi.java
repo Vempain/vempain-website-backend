@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,7 +45,7 @@ public interface AuthApi {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error",
 						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	LoginResponse login(@RequestBody(required = false) LoginRequest request, HttpServletResponse response);
+	LoginResponse login(@Valid @RequestBody(required = false) LoginRequest request, HttpServletResponse response);
 
 	/**
 	 * Invalidates the current authenticated session.

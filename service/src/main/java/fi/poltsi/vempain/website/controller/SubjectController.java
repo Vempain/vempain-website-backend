@@ -4,13 +4,13 @@ import fi.poltsi.vempain.website.api.response.SubjectResponse;
 import fi.poltsi.vempain.website.api.response.WordCloudEntryResponse;
 import fi.poltsi.vempain.website.repository.WebSiteSubjectRepository;
 import fi.poltsi.vempain.website.service.SubjectLookupService;
+import fi.poltsi.vempain.website.tools.LikePatterns;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Limit;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Locale;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,8 +18,7 @@ public class SubjectController implements SubjectApi {
 	private final WebSiteSubjectRepository repository;
 
 	public List<SubjectResponse> autocomplete(@RequestParam(defaultValue = "") String q) {
-		return repository.autocomplete("%" + q.trim()
-		                                      .toLowerCase(Locale.ROOT) + "%", Limit.of(20))
+		return repository.autocomplete(LikePatterns.containsIgnoreCase(q.trim()), Limit.of(20))
 		                 .stream()
 						 .map(SubjectLookupService::toResponse)
 		                 .toList();

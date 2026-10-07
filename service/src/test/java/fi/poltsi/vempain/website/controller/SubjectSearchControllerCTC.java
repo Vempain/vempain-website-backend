@@ -69,7 +69,7 @@ class SubjectSearchControllerCTC {
 											 """));
 		mvc.perform(post("/api/public/subjects/search").contentType(MediaType.APPLICATION_JSON)
 													   .content("""
-																		{"page":1,"size":20,"subject_ids":[4,5,0,-1],"sort_by":"id","direction":"ASC"}
+																		{"page":1,"size":20,"subject_ids":[4,5],"sort_by":"id","direction":"ASC"}
 																		"""))
 		   .andExpect(status().isOk())
 		   .andExpect(content().json("""
@@ -93,6 +93,29 @@ class SubjectSearchControllerCTC {
 		   .andExpect(status().isOk());
 		verify(pages).list(0, 12, "asc", "", null, -1L);
 		verify(subjectSearch).search(List.of(), 0, 12, -1L);
+	}
+
+	@Test
+	void constraintViolationsAreRejectedWithTheErrorContract() throws Exception {
+		// Jakarta Validation on the request DTOs: overlong search text, out-of-range paging and non-positive ids never reach the services
+		mvc.perform(post("/api/public/subject-search").contentType(MediaType.APPLICATION_JSON)
+													  .content("{\"search\":\"" + "a".repeat(201) + "\"}"))
+		   .andExpect(status().isBadRequest())
+		   .andExpect(content().json("""
+											 {"error":"Invalid request"}
+											 """));
+		mvc.perform(post("/api/public/subject-search").contentType(MediaType.APPLICATION_JSON)
+													  .content("{\"page\":-1,\"size\":500}"))
+		   .andExpect(status().isBadRequest());
+		mvc.perform(post("/api/public/subjects/search").contentType(MediaType.APPLICATION_JSON)
+													   .content("""
+																		{"subject_ids":[4,0,-1]}
+																		"""))
+		   .andExpect(status().isBadRequest())
+		   .andExpect(content().json("""
+											 {"error":"Invalid request"}
+											 """));
+		verifyNoInteractions(pages, subjectSearch);
 	}
 
 	@Test

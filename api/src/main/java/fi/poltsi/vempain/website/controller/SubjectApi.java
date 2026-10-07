@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,7 +40,7 @@ public interface SubjectApi {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error",
 						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	List<SubjectResponse> autocomplete(@RequestParam(defaultValue = "") String q);
+	List<SubjectResponse> autocomplete(@RequestParam(defaultValue = "") @Size(max = 200) String q);
 
 	/**
 	 * Returns subject frequency data for a word cloud.

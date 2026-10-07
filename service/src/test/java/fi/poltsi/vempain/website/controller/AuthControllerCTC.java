@@ -18,9 +18,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class AuthControllerCTC {
@@ -70,6 +73,17 @@ class AuthControllerCTC {
 				.andExpect(content().json("""
 						{"error":"Invalid credentials"}
 						"""));
+	}
+
+	@Test
+	void overlongCredentialsAreRejectedBeforeLookup() throws Exception {
+		mvc.perform(post("/api/login").contentType(MediaType.APPLICATION_JSON)
+									  .content("{\"username\":\"" + "a".repeat(256) + "\",\"password\":\"x\"}"))
+		   .andExpect(status().isBadRequest())
+		   .andExpect(content().json("""
+											 {"error":"Invalid request"}
+											 """));
+		verifyNoInteractions(users);
 	}
 
 	@Test

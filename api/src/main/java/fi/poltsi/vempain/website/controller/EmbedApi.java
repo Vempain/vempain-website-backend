@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,7 +52,7 @@ public interface EmbedApi {
 	})
 	MusicDataResponse music(@PathVariable String id, @RequestParam(defaultValue = "0") int page,
 							@RequestParam(defaultValue = "25") int perPage, @RequestParam(defaultValue = "artist") String sortBy,
-							@RequestParam(defaultValue = "asc") String direction, @RequestParam(defaultValue = "") String search);
+							@RequestParam(defaultValue = "asc") String direction, @RequestParam(defaultValue = "") @Size(max = 200) String search);
 
 	/**
 	 * Returns a GPS data set overview.
