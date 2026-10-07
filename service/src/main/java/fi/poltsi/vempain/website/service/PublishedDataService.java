@@ -9,6 +9,8 @@ import fi.poltsi.vempain.website.api.response.GpsPointResponse;
 import fi.poltsi.vempain.website.api.response.GpsTrackResponse;
 import fi.poltsi.vempain.website.api.response.MusicDataResponse;
 import fi.poltsi.vempain.website.api.response.MusicDataRowResponse;
+import fi.poltsi.vempain.website.tools.LikePatterns;
+import fi.poltsi.vempain.website.tools.SqlIdentifiers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -22,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,8 +36,56 @@ import java.util.regex.Pattern;
 public class PublishedDataService {
 
 	private static final Pattern     CLUSTER_KEY   = Pattern.compile("^(\\d+):(-?\\d+):(-?\\d+)$");
-	private static final Set<String> MUSIC_COLUMNS = Set.of("artist", "album_artist", "album", "year", "track_number", "track_total", "track_name",
-															"genre", "duration_seconds");
+	/**
+	 * Maximum number of whitespace separated search terms turned into ILIKE conditions.
+	 */
+	private static final int MAX_SEARCH_TERMS = 10;
+
+	/**
+	 * Sortable columns of a music data set. The request value only selects a member; the SQL text comes from the member.
+	 */
+	enum MusicSortColumn {
+		ARTIST("artist"), ALBUM_ARTIST("album_artist"), ALBUM("album"), YEAR("year"), TRACK_NUMBER("track_number"), TRACK_TOTAL("track_total"),
+		TRACK_NAME("track_name"), GENRE("genre"), DURATION_SECONDS("duration_seconds");
+
+		private final String column;
+
+		MusicSortColumn(String column) {
+			this.column = column;
+		}
+
+		String sql() {
+			return "\"" + column + "\"";
+		}
+
+		String requestValue() {
+			return column;
+		}
+
+		static MusicSortColumn fromRequest(String value) {
+			for (var candidate : values()) {
+				if (candidate.column.equals(value)) {
+					return candidate;
+				}
+			}
+			return ARTIST;
+		}
+	}
+
+	/**
+	 * Sort direction. Anything but {@code desc} (case insensitive) sorts ascending.
+	 */
+	enum SortDirection {
+		ASC, DESC;
+
+		static SortDirection fromRequest(String value) {
+			return "desc".equalsIgnoreCase(value) ? DESC : ASC;
+		}
+
+		String requestValue() {
+			return name().toLowerCase(Locale.ROOT);
+		}
+	}
 	private static final String      LAT           = signed("latitude", "latitude_ref");
 	private static final String      LNG           = signed("longitude", "longitude_ref");
 	private static final String      HAS_COORDS    = " where latitude is not null and longitude is not null";
@@ -66,26 +115,27 @@ public class PublishedDataService {
 	private final JdbcTemplate jdbc;
 
 	public MusicDataResponse music(String id, int page, int size, String sort, String direction, String search) {
-		String table   = table(id);
-		String column  = MUSIC_COLUMNS.contains(sort) ? sort : "artist";
-		String       dir     = "desc".equalsIgnoreCase(direction) ? "DESC" : "ASC";
+		String          table  = table(id);
+		MusicSortColumn column = MusicSortColumn.fromRequest(sort);
+		SortDirection   dir    = SortDirection.fromRequest(direction);
 		int          p       = Math.max(0, page), n = Math.max(1, Math.min(100, size));
 		String trimmed = search == null ? "" : search.trim();
 		String       where   = "";
 		List<Object> args    = new ArrayList<>();
 		if (!trimmed.isEmpty()) {
 			List<String> conditions = new ArrayList<>();
-			for (String term : trimmed.split("\\s+")) {
+			var          terms      = trimmed.split("\\s+");
+			for (int i = 0; i < Math.min(terms.length, MAX_SEARCH_TERMS); i++) {
 				conditions.add("(coalesce(artist,'')||' '||coalesce(album_artist,'')||' '||coalesce(album,'')||' '||coalesce(track_name,'')"
 							   + "||' '||coalesce(genre,'') ilike ?)");
-				args.add("%" + term + "%");
+				args.add(LikePatterns.contains(terms[i]));
 			}
 			where = " where " + String.join(" and ", conditions);
 		}
 		long total = jdbc.queryForObject("select count(*) from " + table + where, Long.class, args.toArray());
 		List<MusicDataRowResponse> items = jdbc.query(
 				"select id,artist,album_artist,album,year,track_number,track_total,track_name,genre,duration_seconds from " + table + where
-				+ " order by \"" + column + "\" " + dir + ", id " + dir + " limit ? offset ?", MUSIC_ROW, append(args, n, p * n).toArray());
+				+ " order by " + column.sql() + " " + dir.name() + ", id " + dir.name() + " limit ? offset ?", MUSIC_ROW, append(args, n, p * n).toArray());
 		int totalPages = (int) Math.ceil((double) total / n);
 		return MusicDataResponse.builder()
 								.identifier(id)
@@ -96,8 +146,8 @@ public class PublishedDataService {
 								.totalPages(totalPages)
 								.first(p == 0)
 								.last(totalPages == 0 || p >= totalPages - 1)
-								.sortBy(column)
-								.direction(dir.toLowerCase(Locale.ROOT))
+								.sortBy(column.requestValue())
+								.direction(dir.requestValue())
 								.search(trimmed)
 								.build();
 	}
@@ -196,17 +246,24 @@ public class PublishedDataService {
 									   .build();
 	}
 
+	/**
+	 * Resolves the quoted table name of a published data set. The identifier is validated as a snake_case name, then looked
+	 * up in {@code information_schema}; the name interpolated into the statements is the one returned by the database, never the
+	 * request text itself.
+	 *
+	 * @throws IllegalArgumentException when the identifier is not a valid name (mapped to 400)
+	 * @throws IllegalStateException    when no such published data set exists (mapped to 404)
+	 */
 	private String table(String id) {
-		if (id == null || !id.matches("[a-z][a-z0-9_]*")) {
+		if (!SqlIdentifiers.isValid(id)) {
 			throw new IllegalArgumentException("Invalid data set identifier");
 		}
-		String table = "website_data__" + id;
-		Integer count = jdbc.queryForObject("select count(*) from information_schema.tables where table_schema=current_schema() and table_name=?",
-											Integer.class, table);
-		if (count == null || count == 0) {
+		var tables = jdbc.queryForList("select table_name from information_schema.tables where table_schema=current_schema() and table_name=?",
+									   String.class, "website_data__" + id);
+		if (tables.isEmpty()) {
 			throw new IllegalStateException("Published data set not found");
 		}
-		return "\"" + table + "\"";
+		return SqlIdentifiers.quote(tables.getFirst());
 	}
 
 	private static int clampZoom(int zoom) {

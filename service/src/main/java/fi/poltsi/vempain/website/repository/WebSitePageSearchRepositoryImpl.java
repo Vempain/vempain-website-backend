@@ -1,6 +1,7 @@
 package fi.poltsi.vempain.website.repository;
 
 import fi.poltsi.vempain.website.entity.WebSitePage;
+import fi.poltsi.vempain.website.tools.LikePatterns;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -9,10 +10,14 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class WebSitePageSearchRepositoryImpl implements WebSitePageSearchRepository {
+
+	/**
+	 * Maximum number of search terms turned into LIKE conditions.
+	 */
+	static final int MAX_SEARCH_TERMS = 10;
 
 	private static final String FROM_CLAUSE =
 			" FROM WebSitePage p LEFT JOIN WebSiteAcl a ON a.aclId = p.aclId WHERE "
@@ -60,10 +65,10 @@ public class WebSitePageSearchRepositoryImpl implements WebSitePageSearchReposit
 
 		if (StringUtils.hasText(pathPrefix)) {
 			where.append(" AND p.filePath LIKE :filePathPrefix");
-			parameters.put("filePathPrefix", pathPrefix + "%");
+			parameters.put("filePathPrefix", LikePatterns.prefix(pathPrefix));
 		}
 
-		List<String> terms = searchTerms == null ? List.of() : searchTerms;
+		List<String> terms = searchTerms == null ? List.of() : searchTerms.subList(0, Math.min(searchTerms.size(), MAX_SEARCH_TERMS));
 		if (!terms.isEmpty()) {
 			List<String> expressions = new ArrayList<>();
 			for (int index = 0; index < terms.size(); index++) {
@@ -71,8 +76,7 @@ public class WebSitePageSearchRepositoryImpl implements WebSitePageSearchReposit
 				expressions.add("(LOWER(p.title) LIKE :" + parameter
 				                + " OR LOWER(p.header) LIKE :" + parameter
 				                + " OR (p.cache IS NOT NULL AND LOWER(p.cache) LIKE :" + parameter + "))");
-				parameters.put(parameter, "%" + terms.get(index)
-				                                     .toLowerCase(Locale.ROOT) + "%");
+				parameters.put(parameter, LikePatterns.containsIgnoreCase(terms.get(index)));
 			}
 			where.append(" AND (")
 			     .append(String.join(" OR ", expressions))

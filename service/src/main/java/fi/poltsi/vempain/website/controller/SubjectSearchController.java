@@ -35,7 +35,7 @@ public class SubjectSearchController implements SubjectSearchApi {
 		SubjectIdSearchRequest criteria = request == null ? new SubjectIdSearchRequest() : request;
 		List<Long> subjectIds = criteria.getSubjectIds() == null ? List.of() : criteria.getSubjectIds()
 																					   .stream()
-																					   .filter(id -> id != null && id > 0)
+																					   .filter(java.util.Objects::nonNull)
 																					   .toList();
 		return subjectSearch.search(subjectIds, valueOrDefault(criteria.getPage(), 0), valueOrDefault(criteria.getSize(), DEFAULT_PAGE_SIZE),
 									AuthenticatedUser.ANONYMOUS_USER_ID);

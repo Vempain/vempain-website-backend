@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,7 +42,7 @@ public interface SubjectSearchApi {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error",
 						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	PagedResponse<WebSitePageResponse> search(@RequestBody(required = false) SubjectSearchRequest request);
+	PagedResponse<WebSitePageResponse> search(@Valid @RequestBody(required = false) SubjectSearchRequest request);
 
 	/**
 	 * Searches pages, galleries and files linked to the given subjects.
@@ -60,5 +61,5 @@ public interface SubjectSearchApi {
 			@ApiResponse(responseCode = "500", description = "Unexpected server error",
 						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
-	SubjectSearchResponse searchIds(@RequestBody(required = false) SubjectIdSearchRequest request);
+	SubjectSearchResponse searchIds(@Valid @RequestBody(required = false) SubjectIdSearchRequest request);
 }

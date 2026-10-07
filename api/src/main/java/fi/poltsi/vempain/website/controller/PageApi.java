@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +49,7 @@ public interface PageApi {
 						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
 	PagedResponse<WebSitePageResponse> pages(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size,
-											 @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") String search,
+											 @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") @Size(max = 200) String search,
 											 @RequestParam(required = false) String path);
 
 	/**
@@ -94,7 +95,7 @@ public interface PageApi {
 						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
 	})
 	PagedResponse<WebSitePageResponse> publicPages(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size,
-												   @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") String search,
+												   @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") @Size(max = 200) String search,
 												   @RequestParam(required = false) String path);
 
 	/**

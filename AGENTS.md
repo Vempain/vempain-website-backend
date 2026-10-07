@@ -42,6 +42,11 @@ treated as a supported implementation.
   they obscure behavior or conflict with Spring. Entities are read-only JPA mappings and keep
   their explicit getters.
 - Keep controllers thin and place business rules in services.
+- SQL/JPQL text is built from constants only; every request value is a bind parameter. When an identifier must be
+  interpolated (publisher `website_data__*` tables) quote it with `tools/SqlIdentifiers` using the name the database
+  returned, and let request values select an enum constant (`PublishedDataService.MusicSortColumn`, `SortDirection`)
+  rather than appending the request string. Build every `LIKE` pattern with `tools/LikePatterns` (escapes `%`, `_`,
+  `\`, caps the length) and cap the number of search terms. See `security/OWASP-2025-audit-report.md` (A05).
 - Preserve the repository's tab-indented Java formatting.
 - Test suffixes are meaningful: `UTC`, `CTC`, `ITC`, and `JTC` (JSON contract tests in `api/`).
 

@@ -32,18 +32,18 @@ ACL checks. No actuator endpoint is included. Swagger/OpenAPI is available only 
 
 ## Phase 2 — A01–A10 checklist
 
-| Category                                 | Verdict                       | Evidence / rationale                                                                                                                                                                                                                                                                 |
-|------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| A01 Broken Access Control                | **FIXED / PASS**              | ACL checks are centralized in `ResourceAccessService`/`AclService`; child pages now use an ownership-scoped query; persisted-token validation precedes global permission and refresh; raw files enforce lexical and real-path containment. Public routes are documented above.       |
-| A02 Security Misconfiguration            | **FIXED / MEDIUM REMEDIATED** | JWT fallback removed, secure cookies default on, CORS now fails closed, generic malformed-request errors, browser security headers, and non-root runtime image added. Production Swagger is disabled; no actuator is present.                                                        |
-| A03 Software Supply Chain Failures       | **PASS / INFO**               | Gradle dependencies use pinned project/BOM versions and HTTPS Maven registries. CI uses a floating reusable workflow and no SBOM task is present; add SHA pinning and CycloneDX in delivery policy. No dependency scanner was configured, so transitive freshness is **UNVERIFIED**. |
-| A04 Cryptographic Failures               | **FIXED / PASS**              | HS256 requires configured `JWT_SECRET`; tokens expire and are persisted for revocation; auth cookies are HttpOnly, SameSite=Lax and Secure by default. Secret rotation and minimum entropy remain deployment responsibilities.                                                       |
-| A05 Injection                            | **PASS**                      | Repository access uses JPA parameters/native bind parameters; search is tokenized; page content is returned and never evaluated as PHP. No command, URL, XML or template sink found.                                                                                                 |
-| A06 Insecure Design                      | **FIXED / PASS**              | Authentication lifecycle has server-side revocation and bounded paging/limits. Public content and ACL semantics are intentional migration behavior. Login rate limiting is not implemented (deferred MEDIUM).                                                                        |
-| A07 Authentication Failures              | **FIXED / PASS**              | Invalid credentials are generic; expired and revoked tokens do not remain authenticated or refresh. JWT TTL defaults to 1200 seconds. Login throttling/account lockout is **UNVERIFIED/DEFERRED**.                                                                                   |
-| A08 Software/Data Integrity Failures     | **PASS / INFO**               | No unsafe object deserialization or unsigned update path was found. CI provenance/SBOM and image digest pinning are not evidenced.                                                                                                                                                   |
-| A09 Security Logging & Alerting Failures | **PARTIAL**                   | Login failures and unexpected exceptions are logged; invalid JWTs are debug logged. There is no alerting/rate-limit telemetry, so repeated failure detection is deferred.                                                                                                            |
-| A10 Mishandling Exceptions               | **FIXED / PASS**              | Unexpected failures return a generic 500; malformed request details no longer disclose converter/internal messages. ACL failures return controlled 401/403 responses.                                                                                                                |
+| Category                                 | Verdict                       | Evidence / rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|------------------------------------------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A01 Broken Access Control                | **FIXED / PASS**              | ACL checks are centralized in `ResourceAccessService`/`AclService`; child pages now use an ownership-scoped query; persisted-token validation precedes global permission and refresh; raw files enforce lexical and real-path containment. Public routes are documented above.                                                                                                                                                                                                                                                           |
+| A02 Security Misconfiguration            | **FIXED / MEDIUM REMEDIATED** | JWT fallback removed, secure cookies default on, CORS now fails closed, generic malformed-request errors, browser security headers, and non-root runtime image added. Production Swagger is disabled; no actuator is present.                                                                                                                                                                                                                                                                                                            |
+| A03 Software Supply Chain Failures       | **PASS / INFO**               | Gradle dependencies use pinned project/BOM versions and HTTPS Maven registries. CI uses a floating reusable workflow and no SBOM task is present; add SHA pinning and CycloneDX in delivery policy. No dependency scanner was configured, so transitive freshness is **UNVERIFIED**.                                                                                                                                                                                                                                                     |
+| A04 Cryptographic Failures               | **FIXED / PASS**              | HS256 requires configured `JWT_SECRET`; tokens expire and are persisted for revocation; auth cookies are HttpOnly, SameSite=Lax and Secure by default. Secret rotation and minimum entropy remain deployment responsibilities.                                                                                                                                                                                                                                                                                                           |
+| A05 Injection                            | **FIXED / PASS**              | All request values are bound parameters (JPA/native). Dynamic SQL structure exists only in `PublishedDataService` (publisher table name, sort column, direction) and is now built from server-side constants: `MusicSortColumn`/`SortDirection` enums and `SqlIdentifiers` quoting of the table name returned by `information_schema`. `LIKE`/`ILIKE` patterns are escaped and length-capped through `LikePatterns` (page search, subject autocomplete, music search). No command, URL, XML or template sink. See the A05 finding below. |
+| A06 Insecure Design                      | **FIXED / PASS**              | Authentication lifecycle has server-side revocation and bounded paging/limits. Public content and ACL semantics are intentional migration behavior. Login rate limiting is not implemented (deferred MEDIUM).                                                                                                                                                                                                                                                                                                                            |
+| A07 Authentication Failures              | **FIXED / PASS**              | Invalid credentials are generic; expired and revoked tokens do not remain authenticated or refresh. JWT TTL defaults to 1200 seconds. Login throttling/account lockout is **UNVERIFIED/DEFERRED**.                                                                                                                                                                                                                                                                                                                                       |
+| A08 Software/Data Integrity Failures     | **PASS / INFO**               | No unsafe object deserialization or unsigned update path was found. CI provenance/SBOM and image digest pinning are not evidenced.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| A09 Security Logging & Alerting Failures | **PARTIAL**                   | Login failures and unexpected exceptions are logged; invalid JWTs are debug logged. There is no alerting/rate-limit telemetry, so repeated failure detection is deferred.                                                                                                                                                                                                                                                                                                                                                                |
+| A10 Mishandling Exceptions               | **FIXED / PASS**              | Unexpected failures return a generic 500; malformed request details no longer disclose converter/internal messages. ACL failures return controlled 401/403 responses.                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Findings and remediations
 
@@ -73,6 +73,36 @@ reflects arbitrary origins with credentials when the allow-list is empty or `*`;
 `SecurityHeadersFilter` adds CSP, frame, MIME, referrer, permissions and HTTPS HSTS headers. Malformed errors are
 generic. Docker runtime now runs as non-root. Covered by unit/regression tests and configuration review.
 
+### LOW — dynamic SQL structure and unescaped LIKE patterns (A05, review alert)
+
+A GitHub Copilot review flagged `PublishedDataService` for concatenating request-derived values into SQL. Analysis of the
+code path: the data-set identifier was validated with `[a-z][a-z0-9_]*` and checked against `information_schema.tables`
+before being interpolated, the sort column had to equal an allow-listed name and the direction was one of two literals,
+and every search value was a bind parameter. The concatenation was therefore **not exploitable** for SQL injection, so the
+alert is rated LOW (pattern risk), not HIGH. Two genuine A05 checklist gaps were found next to it:
+
+- `LIKE`/`ILIKE` patterns were built from raw request text in `WebSitePageSearchRepositoryImpl` (search terms and path
+  prefix), `SubjectController.autocomplete` and the music search, so `%`/`_` acted as wildcards and the pattern length was
+  unbounded (CWE-89 adjacent, resource exhaustion).
+- The request strings themselves were interpolated after validation instead of a server-side constant chosen by them.
+
+**Fix.** `tools/SqlIdentifiers` validates and quotes identifiers; `PublishedDataService` interpolates only the table name
+returned by `information_schema` and enum constants for sort column and direction (the request value selects the enum,
+the enum supplies the SQL text). `tools/LikePatterns` escapes `\`, `%`, `_`, truncates to 200 characters, and is used by
+every LIKE pattern builder; the number of search terms is capped at 10. PostgreSQL's default `LIKE` escape character (`\\`) is relied upon, which is documented
+on the helper. Positive input validation at the boundary is now in place:
+`spring-boot-starter-validation` is on the service classpath, `LoginRequest`, `SubjectSearchRequest` and
+`SubjectIdSearchRequest` carry `@Size`/`@Min`/`@Max`/`@Positive` constraints, the bodies are `@Valid`, the `search`/`q`
+request parameters are capped at 200 characters, and `ApiExceptionHandler` maps constraint violations to a generic
+`400 {"error":"Invalid request"}` without echoing the constraint details.
+
+**Proof.** `PublishedDataServiceITC.searchWildcardsAreTreatedAsLiteralText` (a `%` or `_` search now matches only the row
+containing that character; fails on the previous code where it matched every row) and
+`sortAndDirectionAreServerSideConstantsAndIdentifiersAreValidated` (`artist" desc; drop table ...` as sort, `"; drop table`
+as identifier), `WebSitePageSearchRepositoryImplUTC` (escaped bound patterns, no request text in the JPQL, term cap),
+`LikePatternsUTC`, `SqlIdentifiersUTC`; validation: `SubjectSearchControllerCTC.constraintViolationsAreRejectedWithTheErrorContract`,
+`PageControllerCTC.overlongSearchParameterIsRejected`, `AuthControllerCTC.overlongCredentialsAreRejectedBeforeLookup`.
+
 ## Phase 3–4 verification
 
 Targeted security tests passed:
@@ -80,6 +110,8 @@ Targeted security tests passed:
 ```text
 ./gradlew :service:test --tests '*JwtServiceUTC' --tests '*AclServiceUTC'
   --tests '*ResourceControllerUTC' --tests '*PageServiceUTC' --tests '*PageControllerCTC'
+  --tests '*PublishedDataServiceITC' --tests '*WebSitePageSearchRepositoryImplUTC'
+  --tests '*LikePatternsUTC' --tests '*SqlIdentifiersUTC'
 ```
 
 The full `./gradlew clean test` suite passed. Dynamic probes requiring PostgreSQL and deployed reverse-proxy

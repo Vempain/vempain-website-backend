@@ -33,6 +33,8 @@ dependencies {
     api 'jakarta.servlet:jakarta.servlet-api'
 	// Jackson 3 (tools.jackson) naming strategies plus the com.fasterxml annotations that are still valid
 	api 'org.springframework.boot:spring-boot-jackson'
+	// Jakarta Validation constraints on the request DTOs and API parameters (validated by the service module)
+	api 'jakarta.validation:jakarta.validation-api'
     api 'com.fasterxml.jackson.core:jackson-annotations'
     api "io.swagger.core.v3:swagger-annotations:${libs.versions.swagger.get()}"
 

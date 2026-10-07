@@ -43,6 +43,7 @@ class PublishedDataServiceITC {
 		jdbc.update("insert into website_data__music values (2,'A Artist','A','Album',2021,2,2,'Second','Jazz',200,60.2,24.8,'N','W',"
 					+ "'2024-01-01 11:00',20,'two.jpg')");
 		jdbc.update("insert into website_data__music values (3,'C Artist',null,null,null,null,null,'Third',null,null,null,null,null,null,null,null)");
+		jdbc.update("insert into website_data__music values (4,'Z 100% Rock_n_Roll',null,null,null,null,null,'Fourth',null,null,null,null,null,null,null,null)");
 		service = new PublishedDataService(jdbc);
 	}
 
@@ -71,7 +72,7 @@ class PublishedDataServiceITC {
 	void musicNullColumnsStayNullAndPagingFlagsFollowTheTotal() {
 		MusicDataResponse result = service.music("music", 1, 2, "artist", "asc", "");
 
-		assertEquals(3L, result.getTotalElements());
+		assertEquals(4L, result.getTotalElements());
 		assertEquals(2, result.getTotalPages());
 		assertFalse(result.isFirst());
 		assertTrue(result.isLast());
@@ -144,5 +145,35 @@ class PublishedDataServiceITC {
 	void invalidAndMissingDatasetsFailClearly() {
 		assertThrows(IllegalArgumentException.class, () -> service.music("Bad-name", 0, 1, null, null, null));
 		assertThrows(IllegalStateException.class, () -> service.gpsPoints("missing", 1));
+	}
+
+	@Test
+	void searchWildcardsAreTreatedAsLiteralText() {
+		// Without escaping "%" would match every row and "_" any single character
+		assertEquals(1L, service.music("music", 0, 10, "artist", "asc", "%")
+		                        .getTotalElements());
+		assertEquals(1L, service.music("music", 0, 10, "artist", "asc", "100%")
+		                        .getTotalElements());
+		assertEquals(1L, service.music("music", 0, 10, "artist", "asc", "rock_n")
+		                        .getTotalElements());
+		assertEquals(0L, service.music("music", 0, 10, "artist", "asc", "rock\\n")
+		                        .getTotalElements());
+		// "_" is a literal underscore now; unescaped it would match any character and therefore every row
+		assertEquals(1L, service.music("music", 0, 10, "artist", "asc", "_")
+		                        .getTotalElements());
+		assertEquals(0L, service.music("music", 0, 10, "artist", "asc", "rock%n")
+		                        .getTotalElements());
+	}
+
+	@Test
+	void sortAndDirectionAreServerSideConstantsAndIdentifiersAreValidated() {
+		var result = service.music("music", 0, 10, "artist\" desc; drop table website_data__music; --", "desc; drop", "");
+
+		assertEquals("artist", result.getSortBy());
+		assertEquals("asc", result.getDirection());
+		assertEquals(4L, result.getTotalElements(), "the table still exists");
+		assertThrows(IllegalArgumentException.class, () -> service.music("music\"; drop table website_data__music; --", 0, 1, null, null, null));
+		assertThrows(IllegalArgumentException.class, () -> service.gpsOverview("Music"));
+		assertThrows(IllegalStateException.class, () -> service.gpsOverview("music2"));
 	}
 }
