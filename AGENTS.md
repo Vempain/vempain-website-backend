@@ -34,6 +34,15 @@ treated as a supported implementation.
   locations, embeds) with bulk subject/location lookups; GPS locations are only resolved for
   authenticated callers. Published data sets are mapped in `PublishedDataService`.
 
+## Authentication and authorization
+
+- Authentication is cookie based and self-contained: `service/.../auth/` (`JwtService`, `JwtAuthenticationFilter`, `AuthCookieWriter`,
+  `CurrentUserProvider`, `PasswordVerifier`) issues an `HttpOnly` session cookie and mirrors refreshed tokens in the `X-Auth-Token` header.
+  This backend deliberately has no `vempain-auth-*` dependency; it is the documented exception to the shared-auth rule of the admin and file
+  backends. Do not introduce bearer-token login or the shared auth library here.
+- The service reads the published `vempain_site` schema that the admin backend owns and migrates; it must stay read-only towards those
+  tables. Visibility of pages, files and galleries follows the published site ACL rows for the cookie user; there are no roles.
+
 ## Conventions
 
 - Preserve snake_case JSON contracts (see REST contracts above).
@@ -47,6 +56,9 @@ treated as a supported implementation.
   returned, and let request values select an enum constant (`PublishedDataService.MusicSortColumn`, `SortDirection`)
   rather than appending the request string. Build every `LIKE` pattern with `tools/LikePatterns` (escapes `%`, `_`,
   `\`, caps the length) and cap the number of search terms. See `security/OWASP-2025-audit-report.md` (A05).
+- Request input is validated with Jakarta Validation (`spring-boot-starter-validation`): constraints on the request DTOs (`@Size`, `@Min`/`@Max`,
+  `@Positive`, bounded `List` sizes), `@Valid` on request bodies and `@Size` on free-text query parameters. `ApiExceptionHandler` maps
+  `MethodArgumentNotValidException`/`HandlerMethodValidationException` to `400` with a generic `ApiErrorResponse` and never echoes the input.
 - Preserve the repository's tab-indented Java formatting.
 - Test suffixes are meaningful: `UTC`, `CTC`, `ITC`, and `JTC` (JSON contract tests in `api/`).
 
