@@ -59,6 +59,9 @@ treated as a supported implementation.
 - Request input is validated with Jakarta Validation (`spring-boot-starter-validation`): constraints on the request DTOs (`@Size`, `@Min`/`@Max`,
   `@Positive`, bounded `List` sizes), `@Valid` on request bodies and `@Size` on free-text query parameters. `ApiExceptionHandler` maps
   `MethodArgumentNotValidException`/`HandlerMethodValidationException` to `400` with a generic `ApiErrorResponse` and never echoes the input.
+- In the `prod` profile `config/DatabaseTlsVerification` refuses to start unless `spring.datasource.url` requires TLS (`sslmode=require`,
+  `verify-ca` or `verify-full`, or `ssl` without an `sslmode`); the `vempain-cluster` website stack connects with `sslmode=require` and its
+  database rejects plaintext connections.
 - Preserve the repository's tab-indented Java formatting.
 - Test suffixes are meaningful: `UTC`, `CTC`, `ITC`, and `JTC` (JSON contract tests in `api/`).
 
