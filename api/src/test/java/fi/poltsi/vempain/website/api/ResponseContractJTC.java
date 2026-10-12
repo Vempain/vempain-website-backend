@@ -19,6 +19,7 @@ import fi.poltsi.vempain.website.api.response.LocationResponse;
 import fi.poltsi.vempain.website.api.response.LoginResponse;
 import fi.poltsi.vempain.website.api.response.MusicDataResponse;
 import fi.poltsi.vempain.website.api.response.MusicDataRowResponse;
+import fi.poltsi.vempain.website.api.response.OpenGraphResponse;
 import fi.poltsi.vempain.website.api.response.PageDirectoryResponse;
 import fi.poltsi.vempain.website.api.response.PageEmbedResponse;
 import fi.poltsi.vempain.website.api.response.PagedResponse;
@@ -54,10 +55,19 @@ class ResponseContractJTC {
 	@Test
 	void pageMatchesTheWebSitePageModel() {
 		assertEquals(Set.of("id", "page_id", "title", "header", "body", "page_style", "secure", "acl_id", "file_path", "creator", "created",
-							"modifier", "modified", "published", "embeds", "subjects"),
+							"modifier", "modified", "published", "embeds", "subjects", "open_graph"),
 					 keys(WebSitePageResponse.builder()
 											 .published(LocalDateTime.of(2024, 5, 15, 12, 0))
 											 .build()));
+	}
+
+	@Test
+	void openGraphMatchesTheOpenGraphModel() {
+		assertEquals(Set.of("type", "site_name", "title", "description", "path", "image_path", "image_mimetype", "image_width", "image_height",
+							"published", "modified"),
+					 keys(OpenGraphResponse.builder()
+										   .published(LocalDateTime.of(2024, 5, 15, 12, 0))
+										   .build()));
 	}
 
 	@Test

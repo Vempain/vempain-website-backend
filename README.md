@@ -69,6 +69,18 @@ Cookie-based authentication:
 - Authenticated responses carry a refreshed token in the `X-Auth-Token` header, which the frontend mirrors into local
   storage.
 
+## Open Graph and link previews
+
+Single page responses (`GET /api/public/page-content`, `GET /api/pages/{id}`) carry `open_graph`: the type (`article`), site name,
+title, description (header or a summary of the body), canonical frontend path, the first image of the page the caller may see (`image_path` below `/file`, with
+MIME type and size) and the publish/modify times. The frontend sets its `<head>` tags from it.
+
+`GET /api/public/open-graph/<frontend route>` returns the same metadata for any route (`/pages/trips/summer`, `/galleries/3`, ...),
+as JSON or, with `Accept: text/html`, as a small HTML document whose head carries the Open Graph and Twitter card tags. The frontend's
+nginx proxies link-preview crawlers (which do not run the single-page application) to the HTML variant and passes the public origin in
+`X-Vempain-Origin` (`scheme://host[:port]`) for the absolute URLs. Restricted and unknown routes yield the site level metadata (name and
+description from the `site.name`/`site.description` configuration) rather than an error.
+
 ## Running
 
 ```bash

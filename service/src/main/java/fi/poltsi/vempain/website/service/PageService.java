@@ -23,12 +23,15 @@ public class PageService {
 	private final WebSitePageRepository pages;
 	private final ResponseMapperService mapper;
 	private final ResourceAccessService access;
+	private final OpenGraphService openGraph;
 
 	/**
-	 * Full page response with the rendered body.
+	 * Full page response with the rendered body and the Open Graph metadata of the page.
 	 */
 	public WebSitePageResponse page(WebSitePage page) {
-		return mapper.page(page);
+		WebSitePageResponse response = mapper.page(page);
+		response.setOpenGraph(openGraph.forPage(page));
+		return response;
 	}
 
 	/**

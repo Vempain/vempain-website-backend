@@ -123,3 +123,17 @@ Login rate limiting, centralized alerting, dependency/SBOM scanning, CI SHA pinn
 JWT entropy validation are deferred operational improvements. The Spring backend intentionally does **not** evaluate
 page content as executable code. Its `/file`, page rendering, cookie/CORS, and ACL controls require verification
 together with the frontend deployment. No frontend code was changed.
+
+## Additions after the audit
+
+### 2026-10-12 — Open Graph metadata endpoint and HTML document
+
+`OpenGraphApi` (`/api/public/open-graph/**`) and `WebSitePageResponse.open_graph` were added for link previews. Access control (A01):
+the metadata is resolved for the current caller through `ResourceAccessService`/the `ForUser` repository queries, and a restricted or
+missing page, gallery or image degrades to the site level metadata instead of an error, so the endpoint does not reveal whether
+restricted content exists; the frontend proxy strips credentials, so crawlers are always anonymous. Injection (A03/A05): the HTML
+variant (`tools/OpenGraphHtml`) HTML-escapes every text, percent-encodes the image path per segment and refuses dot segments,
+backslashes and control characters; the route is read from the request path and only used for repository lookups with bind
+parameters; the `X-Vempain-Origin` header is accepted only as a plain `scheme://host[:port]` value (otherwise the request origin is
+used), so it cannot inject markup or a `javascript:` URL. Verification: `OpenGraphServiceUTC`, `OpenGraphHtmlUTC`,
+`OpenGraphControllerCTC`, `ResponseContractJTC`.
