@@ -19,7 +19,8 @@ treated as a supported implementation.
 - Every endpoint declares a typed body: a `*Response` class (or `PagedResponse<*Response>` /
   `List<*Response>`) and a `*Request` class for JSON bodies. Never return `Object`, `Map` or
   hand-built maps from a controller or service; the only `Map` body is the public configuration,
-  which is a genuine key/value set (`Record<string, string>` on the frontend).
+  which is a genuine key/value set (`Record<string, string>` on the frontend). The only non-JSON body
+  is the `text/html` variant of `OpenGraphApi` (see Open Graph below), consumed by link-preview crawlers.
 - DTOs follow the admin/file backend style: Lombok `@Data @Builder @NoArgsConstructor
   @AllArgsConstructor`, `@JsonIgnoreProperties(ignoreUnknown = true)`,
   `@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)` (Jackson 3, `tools.jackson`),
@@ -33,6 +34,22 @@ treated as a supported implementation.
 - Entities are mapped to DTOs in `service/ResponseMapperService` (pages, files, galleries,
   locations, embeds) with bulk subject/location lookups; GPS locations are only resolved for
   authenticated callers. Published data sets are mapped in `PublishedDataService`.
+
+## Open Graph
+
+- `service/OpenGraphService` derives the Open Graph metadata of a frontend route (`forRoute`: `/pages/<path>`, `/galleries/<id>`,
+  `/galleries`, `/search`, anything else maps to `/pages/index`) or of a loaded page (`forPage`): title, description (page header, else
+  a 200-character summary of the rendered body, else the site description), canonical path, and the first image the caller may see from
+  the page's embeds (`image`, `hero` image/carousel, `gallery`; the stored embed list first, the body's embed comments as fallback) or
+  the gallery's first image file. Site name and description come from the `site.name`/`site.description` configuration rows. A route
+  the caller may not see, or that does not exist, yields the site level metadata with the route as path; it never throws, because a
+  link preview must not reveal whether restricted content exists.
+- `PageService.page` attaches it as `WebSitePageResponse.open_graph` (null in listings and `children`); `OpenGraphResponse` mirrors
+  `vempain-website-frontend/src/models/OpenGraph.ts` and is pinned by `ResponseContractJTC`.
+- `OpenGraphApi` (`/api/public/open-graph/**`, the frontend route after the base path) serves the same metadata as JSON, and as a
+  minimal HTML document (`Accept: text/html`, rendered by `tools/OpenGraphHtml`) for the frontend's nginx crawler proxy. Absolute URLs use
+  the `X-Vempain-Origin` header when it is a plain `scheme://host[:port]`, otherwise the request's own origin; every text is HTML-escaped
+  and the image path is percent-encoded per segment and refused when it contains dot segments, backslashes or control characters.
 
 ## Authentication and authorization
 

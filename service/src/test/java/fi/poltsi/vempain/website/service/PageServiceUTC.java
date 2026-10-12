@@ -1,6 +1,7 @@
 package fi.poltsi.vempain.website.service;
 
 import fi.poltsi.vempain.website.api.response.DirectoryNodeResponse;
+import fi.poltsi.vempain.website.api.response.OpenGraphResponse;
 import fi.poltsi.vempain.website.api.response.WebSitePageResponse;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiException;
@@ -23,20 +24,26 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PageServiceUTC {
-	private final WebSitePageRepository pages   = mock(WebSitePageRepository.class);
-	private final ResponseMapperService mapper  = mock(ResponseMapperService.class);
-	private final ResourceAccessService access  = mock(ResourceAccessService.class);
-	private final PageService           service = new PageService(pages, mapper, access);
+	private final WebSitePageRepository pages     = mock(WebSitePageRepository.class);
+	private final ResponseMapperService mapper    = mock(ResponseMapperService.class);
+	private final ResourceAccessService access    = mock(ResourceAccessService.class);
+	private final OpenGraphService      openGraph = mock(OpenGraphService.class);
+	private final PageService           service   = new PageService(pages, mapper, access, openGraph);
 
 	@Test
-	void pageDelegatesToTheMapper() {
+	void pageDelegatesToTheMapperAndAttachesTheOpenGraphMetadata() {
 		WebSitePage page = mock(WebSitePage.class);
 		WebSitePageResponse response = WebSitePageResponse.builder()
 														  .id(3L)
 														  .build();
+		OpenGraphResponse metadata = OpenGraphResponse.builder()
+													  .title("Page")
+													  .build();
 		when(mapper.page(page)).thenReturn(response);
+		when(openGraph.forPage(page)).thenReturn(metadata);
 
 		assertSame(response, service.page(page));
+		assertSame(metadata, response.getOpenGraph());
 	}
 
 	@Test

@@ -54,4 +54,6 @@ public class WebSitePageResponse {
 	private List<PageEmbedResponse> embeds;
 	@Schema(description = "Subjects attached to the page")
 	private List<SubjectResponse>   subjects;
+	@Schema(description = "Open Graph metadata of the page; set by the single page endpoints, null in listings")
+	private OpenGraphResponse openGraph;
 }
