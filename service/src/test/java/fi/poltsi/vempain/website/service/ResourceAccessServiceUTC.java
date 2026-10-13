@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,4 +45,24 @@ class ResourceAccessServiceUTC {
         when(acl.canAccess(7L, null)).thenReturn(false);
         assertThrows(ApiException.class, () -> service.requireAccess(7L));
     }
+
+	@Test
+	void requireAccessDistinguishesAnonymousFromDeniedAndPassesVisibleResources() {
+		when(users.current()).thenReturn(Optional.empty());
+		when(acl.canAccess(7L, null)).thenReturn(false);
+		ApiException anonymous = assertThrows(ApiException.class, () -> service.requireAccess(7L));
+		assertEquals(HttpStatus.UNAUTHORIZED, anonymous.getStatus());
+		assertEquals("Unauthorized", anonymous.getMessage());
+
+		AuthenticatedUser user = new AuthenticatedUser(2, "a", false, "t");
+		when(users.current()).thenReturn(Optional.of(user));
+		when(acl.canAccess(7L, user)).thenReturn(false);
+		ApiException denied = assertThrows(ApiException.class, () -> service.requireAccess(7L));
+		assertEquals(HttpStatus.FORBIDDEN, denied.getStatus());
+		assertEquals("Forbidden", denied.getMessage());
+
+		when(acl.canAccess(7L, user)).thenReturn(true);
+		assertDoesNotThrow(() -> service.requireAccess(7L));
+		assertDoesNotThrow(() -> service.requireAccess(0L));
+	}
 }

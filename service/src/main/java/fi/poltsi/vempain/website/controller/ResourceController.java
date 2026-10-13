@@ -115,7 +115,7 @@ public class ResourceController implements ResourceApi {
 				return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).headers(headers).build();
 			}
 			long start = bounds[0].isEmpty() ? Math.max(0, length - Long.parseLong(bounds[1])) : Long.parseLong(bounds[0]);
-			long end = bounds[1].isEmpty() ? length - 1 : Long.parseLong(bounds[1]);
+			long end = bounds[0].isEmpty() || bounds[1].isEmpty() ? length - 1 : Long.parseLong(bounds[1]);
 			if (start < 0 || start > end || end >= length) {
 				return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).headers(headers).build();
 			}

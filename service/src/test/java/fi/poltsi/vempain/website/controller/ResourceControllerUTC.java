@@ -185,6 +185,84 @@ class ResourceControllerUTC {
 		assertTrue(Files.exists(file));
 	}
 
+	@Test
+	void missingFilesRootIsNotFoundAfterTheAccessCheck(@TempDir Path root) throws Exception {
+		properties.setFilesRoot(root.resolve("not-mounted")
+		                            .toString());
+		WebSiteFile entity = fileEntity("file.txt", "text/plain", 3L);
+		when(files.findByFilePath("file.txt")).thenReturn(Optional.of(entity));
+
+		ResponseEntity<Resource> response = controller.raw("file.txt", request(null));
+
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		verify(access).requireAccess(3L);
+	}
+
+	@Test
+	void emptyRangeIsUnsatisfiable(@TempDir Path root) throws Exception {
+		Files.writeString(root.resolve("file.txt"), "0123456789");
+		properties.setFilesRoot(root.toString());
+		WebSiteFile entity = fileEntity("file.txt", "text/plain", null);
+		when(files.findByFilePath("file.txt")).thenReturn(Optional.of(entity));
+
+		ResponseEntity<Resource> response = controller.raw("file.txt", request("bytes=-"));
+
+		assertEquals(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE, response.getStatusCode());
+		assertEquals("bytes", response.getHeaders()
+		                              .getFirst("Accept-Ranges"));
+	}
+
+	@Test
+	void suffixAndOpenEndedRangesServeTheTail(@TempDir Path root) throws Exception {
+		Files.writeString(root.resolve("file.txt"), "0123456789");
+		properties.setFilesRoot(root.toString());
+		WebSiteFile entity = fileEntity("file.txt", "text/plain", null);
+		when(files.findByFilePath("file.txt")).thenReturn(Optional.of(entity));
+
+		ResponseEntity<Resource> suffix = controller.raw("file.txt", request("bytes=-3"));
+		assertEquals(HttpStatus.PARTIAL_CONTENT, suffix.getStatusCode());
+		assertEquals("bytes 7-9/10", suffix.getHeaders()
+		                                   .getFirst("Content-Range"));
+		assertEquals(3L, suffix.getHeaders()
+		                       .getContentLength());
+		assertEquals("789", new String(suffix.getBody()
+		                                     .getInputStream()
+		                                     .readAllBytes()));
+
+		ResponseEntity<Resource> openEnded = controller.raw("file.txt", request("bytes=8-"));
+		assertEquals("bytes 8-9/10", openEnded.getHeaders()
+		                                      .getFirst("Content-Range"));
+		assertEquals("89", new String(openEnded.getBody()
+		                                       .getInputStream()
+		                                       .readAllBytes()));
+
+		ResponseEntity<Resource> overlongSuffix = controller.raw("file.txt", request("bytes=-50"));
+		assertEquals("bytes 0-9/10", overlongSuffix.getHeaders()
+		                                           .getFirst("Content-Range"));
+	}
+
+	@Test
+	void rangeStreamStopsAtTheRangeEndWhenReadByteByByte(@TempDir Path root) throws Exception {
+		Files.writeString(root.resolve("file.txt"), "0123456789");
+		properties.setFilesRoot(root.toString());
+		WebSiteFile entity = fileEntity("file.txt", "text/plain", null);
+		when(files.findByFilePath("file.txt")).thenReturn(Optional.of(entity));
+
+		ResponseEntity<Resource> response = controller.raw("file.txt", request("bytes=4-6"));
+
+		try (java.io.InputStream input = response.getBody()
+		                                         .getInputStream()) {
+			StringBuilder read = new StringBuilder();
+			int           value;
+			while ((value = input.read()) >= 0) {
+				read.append((char) value);
+			}
+			assertEquals("456", read.toString());
+			assertEquals(-1, input.read());
+			assertEquals(-1, input.read(new byte[4], 0, 4));
+		}
+	}
+
 	private WebSiteFile fileEntity(String path, String mimetype, Long aclId) {
 		WebSiteFile entity = mock(WebSiteFile.class);
 		when(entity.getFilePath()).thenReturn(path);

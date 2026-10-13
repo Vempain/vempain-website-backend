@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
 	id 'maven-publish'
+	id 'jacoco'
 	alias(libs.plugins.freefair.lombok)
 }
 
@@ -76,6 +77,14 @@ publishing {
 				password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
 			}
 		}
+	}
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
 	}
 }
 
