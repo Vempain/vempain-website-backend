@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -119,6 +120,34 @@ class PageControllerCTC {
 											 """));
 		mvc.perform(get("/api/pages").param("search", "a".repeat(200)))
 		   .andExpect(status().isOk());
+	}
+
+	@Test
+	void pageContentIsResolvedByPathAndHiddenPagesLookMissing() throws Exception {
+		WebSitePage page = mock(WebSitePage.class);
+		when(pages.byPath("trips/summer")).thenReturn(page);
+		when(pages.page(page)).thenReturn(WebSitePageResponse.builder()
+															 .id(4L)
+															 .pageId(40L)
+															 .title("Summer")
+															 .filePath("trips/summer")
+															 .build());
+		doNothing().when(pages)
+				   .require(page);
+		when(pages.byPath("trips/hidden")).thenReturn(null);
+		doThrow(ApiException.notFound("Page not found")).when(pages)
+														.require(null);
+
+		mvc.perform(get("/api/public/page-content").param("file_path", "trips/summer"))
+		   .andExpect(status().isOk())
+		   .andExpect(content().json("""
+											 {"id":4,"page_id":40,"title":"Summer","file_path":"trips/summer"}
+											 """));
+		mvc.perform(get("/api/public/page-content").param("file_path", "trips/hidden"))
+		   .andExpect(status().isNotFound())
+		   .andExpect(content().json("""
+											 {"error":"Page not found"}
+											 """));
 	}
 
 	@Test

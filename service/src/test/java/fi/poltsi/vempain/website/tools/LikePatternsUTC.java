@@ -27,6 +27,25 @@ class LikePatternsUTC {
 	}
 
 	@Test
+	void nullTextYieldsAnEmptyCaseInsensitivePattern() {
+		assertEquals("%%", LikePatterns.containsIgnoreCase(null));
+	}
+
+	@Test
+	void tokenListsAreCappedAtTheMaximum() {
+		var tokens = java.util.stream.IntStream.range(0, LikePatterns.MAX_TOKENS + 5)
+											   .mapToObj(Integer::toString)
+											   .toList();
+
+		assertEquals(LikePatterns.MAX_TOKENS, LikePatterns.limitTokens(tokens)
+														  .size());
+		assertEquals(tokens.subList(0, LikePatterns.MAX_TOKENS), LikePatterns.limitTokens(tokens));
+		assertEquals(java.util.List.of("a", "b"), LikePatterns.limitTokens(java.util.List.of("a", "b")));
+		assertTrue(LikePatterns.limitTokens(null)
+							   .isEmpty());
+	}
+
+	@Test
 	void overlongTextIsTruncated() {
 		var text    = "a".repeat(LikePatterns.MAX_TEXT_LENGTH + 50);
 		var pattern = LikePatterns.contains(text);
