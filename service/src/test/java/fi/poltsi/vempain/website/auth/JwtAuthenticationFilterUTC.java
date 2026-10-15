@@ -1,14 +1,16 @@
 package fi.poltsi.vempain.website.auth;
 
-import fi.poltsi.vempain.website.exception.TokenExpiredException;
+import java.util.Optional;
+
 import jakarta.servlet.FilterChain;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import tools.jackson.databind.ObjectMapper;
 
-import java.util.Optional;
+import fi.poltsi.vempain.website.exception.TokenExpiredException;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -22,55 +24,55 @@ import static org.mockito.Mockito.when;
 
 class JwtAuthenticationFilterUTC {
 
-	@Test
-	void revokedTokenIsAnonymousAndIsNotRefreshed() throws Exception {
-		JwtService       jwt     = mock(JwtService.class);
-		AuthCookieWriter cookies = mock(AuthCookieWriter.class);
-		when(cookies.readToken(any())).thenReturn("revoked");
-		when(jwt.verify("revoked")).thenReturn(Optional.of(new AuthenticatedUser(7, "alice", true, "revoked")));
-		when(jwt.isPersistedAndValid("revoked")).thenReturn(false);
+    @Test
+    void revokedTokenIsAnonymousAndIsNotRefreshed() throws Exception {
+        JwtService jwt = mock(JwtService.class);
+        AuthCookieWriter cookies = mock(AuthCookieWriter.class);
+        when(cookies.readToken(any())).thenReturn("revoked");
+        when(jwt.verify("revoked")).thenReturn(Optional.of(new AuthenticatedUser(7, "alice", true, "revoked")));
+        when(jwt.isPersistedAndValid("revoked")).thenReturn(false);
 
-		MockHttpServletRequest  request  = new MockHttpServletRequest();
-		MockHttpServletResponse response = new MockHttpServletResponse();
-		FilterChain             chain    = new MockFilterChain();
-		new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, chain);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = new MockFilterChain();
+        new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, chain);
 
-		assertNull(request.getAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE));
-		verify(cookies, never()).write(any(), anyString(), anyLong());
-	}
+        assertNull(request.getAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE));
+        verify(cookies, never()).write(any(), anyString(), anyLong());
+    }
 
-	@Test
-	void activeTokenIsAttachedAndRefreshed() throws Exception {
-		JwtService        jwt     = mock(JwtService.class);
-		AuthCookieWriter  cookies = mock(AuthCookieWriter.class);
-		AuthenticatedUser user    = new AuthenticatedUser(7, "alice", false, "active");
-		when(cookies.readToken(any())).thenReturn("active");
-		when(jwt.verify("active")).thenReturn(Optional.of(user));
-		when(jwt.isPersistedAndValid("active")).thenReturn(true);
-		when(jwt.refresh(user)).thenReturn("refreshed");
-		when(jwt.ttlSeconds()).thenReturn(1200L);
+    @Test
+    void activeTokenIsAttachedAndRefreshed() throws Exception {
+        JwtService jwt = mock(JwtService.class);
+        AuthCookieWriter cookies = mock(AuthCookieWriter.class);
+        AuthenticatedUser user = new AuthenticatedUser(7, "alice", false, "active");
+        when(cookies.readToken(any())).thenReturn("active");
+        when(jwt.verify("active")).thenReturn(Optional.of(user));
+        when(jwt.isPersistedAndValid("active")).thenReturn(true);
+        when(jwt.refresh(user)).thenReturn("refreshed");
+        when(jwt.ttlSeconds()).thenReturn(1200L);
 
-		MockHttpServletRequest  request  = new MockHttpServletRequest();
-		MockHttpServletResponse response = new MockHttpServletResponse();
-		new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, new MockFilterChain());
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, new MockFilterChain());
 
-		verify(cookies).write(response, "refreshed", 1200L);
-	}
+        verify(cookies).write(response, "refreshed", 1200L);
+    }
 
-	@Test
-	void expiredTokenEndsTheRequestWithTheErrorContract() throws Exception {
-		JwtService       jwt     = mock(JwtService.class);
-		AuthCookieWriter cookies = mock(AuthCookieWriter.class);
-		when(cookies.readToken(any())).thenReturn("expired");
-		when(jwt.verify("expired")).thenThrow(new TokenExpiredException("Session expired"));
+    @Test
+    void expiredTokenEndsTheRequestWithTheErrorContract() throws Exception {
+        JwtService jwt = mock(JwtService.class);
+        AuthCookieWriter cookies = mock(AuthCookieWriter.class);
+        when(cookies.readToken(any())).thenReturn("expired");
+        when(jwt.verify("expired")).thenThrow(new TokenExpiredException("Session expired"));
 
-		MockHttpServletRequest  request  = new MockHttpServletRequest();
-		MockHttpServletResponse response = new MockHttpServletResponse();
-		new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, new MockFilterChain());
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, new MockFilterChain());
 
-		assertEquals(401, response.getStatus());
-		assertEquals(new ObjectMapper().readTree("{\"error\":\"Session expired\",\"code\":\"SESSION_EXPIRED\"}"),
-					 new ObjectMapper().readTree(response.getContentAsString()));
-		verify(cookies).clear(response);
-	}
+        assertEquals(401, response.getStatus());
+        assertEquals(new ObjectMapper().readTree("{\"error\":\"Session expired\",\"code\":\"SESSION_EXPIRED\"}"),
+                new ObjectMapper().readTree(response.getContentAsString()));
+        verify(cookies).clear(response);
+    }
 }

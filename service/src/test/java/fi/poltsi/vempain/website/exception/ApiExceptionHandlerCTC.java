@@ -17,77 +17,78 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Every failure reaches the caller as an {@code ApiErrorResponse}; unexpected failures and malformed input never echo details.
  */
 class ApiExceptionHandlerCTC {
-	private MockMvc mvc;
 
-	@BeforeEach
-	void setUp() {
-		mvc = MockMvcBuilders.standaloneSetup(new FailingController())
-							 .setControllerAdvice(new ApiExceptionHandler())
-							 .build();
-	}
+    private MockMvc mvc;
 
-	@Test
-	void apiExceptionsKeepTheirStatusAndMessage() throws Exception {
-		mvc.perform(get("/fail/forbidden"))
-		   .andExpect(status().isForbidden())
-		   .andExpect(content().json("""
-											 {"error":"Forbidden","code":null}
-											 """));
-	}
+    @BeforeEach
+    void setUp() {
+        mvc = MockMvcBuilders.standaloneSetup(new FailingController())
+            .setControllerAdvice(new ApiExceptionHandler())
+            .build();
+    }
 
-	@Test
-	void illegalArgumentIsABadRequestAndIllegalStateIsNotFound() throws Exception {
-		mvc.perform(get("/fail/illegal-argument"))
-		   .andExpect(status().isBadRequest())
-		   .andExpect(content().json("""
-											 {"error":"Unsupported sort column"}
-											 """));
-		mvc.perform(get("/fail/illegal-state"))
-		   .andExpect(status().isNotFound())
-		   .andExpect(content().json("""
-											 {"error":"Data set is not published"}
-											 """));
-	}
+    @Test
+    void apiExceptionsKeepTheirStatusAndMessage() throws Exception {
+        mvc.perform(get("/fail/forbidden"))
+            .andExpect(status().isForbidden())
+            .andExpect(content().json("""
+                    {"error":"Forbidden","code":null}
+                    """));
+    }
 
-	@Test
-	void malformedParametersAreReportedGenerically() throws Exception {
-		mvc.perform(get("/fail/typed").param("count", "many"))
-		   .andExpect(status().isBadRequest())
-		   .andExpect(content().json("""
-											 {"error":"Malformed request"}
-											 """));
-		mvc.perform(get("/fail/typed"))
-		   .andExpect(status().isBadRequest())
-		   .andExpect(content().json("""
-											 {"error":"Malformed request"}
-											 """));
-	}
+    @Test
+    void illegalArgumentIsABadRequestAndIllegalStateIsNotFound() throws Exception {
+        mvc.perform(get("/fail/illegal-argument"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().json("""
+                    {"error":"Unsupported sort column"}
+                    """));
+        mvc.perform(get("/fail/illegal-state"))
+            .andExpect(status().isNotFound())
+            .andExpect(content().json("""
+                    {"error":"Data set is not published"}
+                    """));
+    }
 
-	@Test
-	void unexpectedFailuresNeverLeakTheirMessage() throws Exception {
-		mvc.perform(get("/fail/unexpected"))
-		   .andExpect(status().isInternalServerError())
-		   .andExpect(content().json("""
-											 {"error":"Internal server error"}
-											 """));
-	}
+    @Test
+    void malformedParametersAreReportedGenerically() throws Exception {
+        mvc.perform(get("/fail/typed").param("count", "many"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().json("""
+                    {"error":"Malformed request"}
+                    """));
+        mvc.perform(get("/fail/typed"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().json("""
+                    {"error":"Malformed request"}
+                    """));
+    }
 
-	@RestController
-	static class FailingController {
+    @Test
+    void unexpectedFailuresNeverLeakTheirMessage() throws Exception {
+        mvc.perform(get("/fail/unexpected"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().json("""
+                    {"error":"Internal server error"}
+                    """));
+    }
 
-		@GetMapping("/fail/{kind}")
-		String fail(@PathVariable String kind) {
-			switch (kind) {
-				case "forbidden" -> throw ApiException.forbidden("Forbidden");
-				case "illegal-argument" -> throw new IllegalArgumentException("Unsupported sort column");
-				case "illegal-state" -> throw new IllegalStateException("Data set is not published");
-				default -> throw new RuntimeException("database password is hunter2");
-			}
-		}
+    @RestController
+    static class FailingController {
 
-		@GetMapping("/fail/typed")
-		String typed(@RequestParam int count) {
-			return String.valueOf(count);
-		}
-	}
+        @GetMapping("/fail/{kind}")
+        String fail(@PathVariable String kind) {
+            switch (kind) {
+                case "forbidden" -> throw ApiException.forbidden("Forbidden");
+                case "illegal-argument" -> throw new IllegalArgumentException("Unsupported sort column");
+                case "illegal-state" -> throw new IllegalStateException("Data set is not published");
+                default -> throw new RuntimeException("database password is hunter2");
+            }
+        }
+
+        @GetMapping("/fail/typed")
+        String typed(@RequestParam int count) {
+            return String.valueOf(count);
+        }
+    }
 }

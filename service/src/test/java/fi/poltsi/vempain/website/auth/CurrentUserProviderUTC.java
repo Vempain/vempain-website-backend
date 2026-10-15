@@ -11,43 +11,44 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CurrentUserProviderUTC {
-	private final CurrentUserProvider provider = new CurrentUserProvider();
 
-	@AfterEach
-	void tearDown() {
-		RequestContextHolder.resetRequestAttributes();
-	}
+    private final CurrentUserProvider provider = new CurrentUserProvider();
 
-	@Test
-	void claimsAttachedByTheFilterAreExposed() {
-		MockHttpServletRequest request = new MockHttpServletRequest();
-		request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, new AuthenticatedUser(42L, "alice", true, "token"));
-		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    @AfterEach
+    void tearDown() {
+        RequestContextHolder.resetRequestAttributes();
+    }
 
-		assertEquals("alice", provider.current()
-									  .orElseThrow()
-									  .username());
-		assertEquals(42L, provider.currentUserId());
-		assertTrue(provider.hasGlobalPermission());
-	}
+    @Test
+    void claimsAttachedByTheFilterAreExposed() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, new AuthenticatedUser(42L, "alice", true, "token"));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
-	@Test
-	void requestWithoutClaimsIsAnonymous() {
-		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+        assertEquals("alice", provider.current()
+            .orElseThrow()
+            .username());
+        assertEquals(42L, provider.currentUserId());
+        assertTrue(provider.hasGlobalPermission());
+    }
 
-		assertTrue(provider.current()
-						   .isEmpty());
-		assertEquals(AuthenticatedUser.ANONYMOUS_USER_ID, provider.currentUserId());
-		assertFalse(provider.hasGlobalPermission());
-	}
+    @Test
+    void requestWithoutClaimsIsAnonymous() {
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
 
-	@Test
-	void noRequestContextIsAnonymous() {
-		RequestContextHolder.resetRequestAttributes();
+        assertTrue(provider.current()
+            .isEmpty());
+        assertEquals(AuthenticatedUser.ANONYMOUS_USER_ID, provider.currentUserId());
+        assertFalse(provider.hasGlobalPermission());
+    }
 
-		assertTrue(provider.current()
-						   .isEmpty());
-		assertEquals(-1L, provider.currentUserId());
-		assertFalse(provider.hasGlobalPermission());
-	}
+    @Test
+    void noRequestContextIsAnonymous() {
+        RequestContextHolder.resetRequestAttributes();
+
+        assertTrue(provider.current()
+            .isEmpty());
+        assertEquals(-1L, provider.currentUserId());
+        assertFalse(provider.hasGlobalPermission());
+    }
 }

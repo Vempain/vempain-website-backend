@@ -14,54 +14,54 @@ import jakarta.persistence.Table;
 @Table(name = "web_site_subject")
 public class WebSiteSubject {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
 
-	@Column(name = "subject")
-	private String subject;
+    @Column(name = "subject")
+    private String subject;
 
-	@Column(name = "subject_de")
-	private String subjectDe;
+    @Column(name = "subject_de")
+    private String subjectDe;
 
-	@Column(name = "subject_en")
-	private String subjectEn;
+    @Column(name = "subject_en")
+    private String subjectEn;
 
-	@Column(name = "subject_es")
-	private String subjectEs;
+    @Column(name = "subject_es")
+    private String subjectEs;
 
-	@Column(name = "subject_fi")
-	private String subjectFi;
+    @Column(name = "subject_fi")
+    private String subjectFi;
 
-	@Column(name = "subject_se")
-	private String subjectSe;
+    @Column(name = "subject_se")
+    private String subjectSe;
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getSubject() {
-		return subject;
-	}
+    public String getSubject() {
+        return subject;
+    }
 
-	public String getSubjectDe() {
-		return subjectDe;
-	}
+    public String getSubjectDe() {
+        return subjectDe;
+    }
 
-	public String getSubjectEn() {
-		return subjectEn;
-	}
+    public String getSubjectEn() {
+        return subjectEn;
+    }
 
-	public String getSubjectEs() {
-		return subjectEs;
-	}
+    public String getSubjectEs() {
+        return subjectEs;
+    }
 
-	public String getSubjectFi() {
-		return subjectFi;
-	}
+    public String getSubjectFi() {
+        return subjectFi;
+    }
 
-	public String getSubjectSe() {
-		return subjectSe;
-	}
+    public String getSubjectSe() {
+        return subjectSe;
+    }
 }

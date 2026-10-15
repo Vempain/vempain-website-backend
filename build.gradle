@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.spring.dependency.management) apply false
 }
 
+// Team code convention: Spotless with the shared Eclipse profile, Checkstyle, build constraints, git hooks.
+apply from: 'gradle/team-convention.gradle'
+
 allprojects {
     group = 'fi.poltsi.vempain'
     version = libs.versions.release.get()

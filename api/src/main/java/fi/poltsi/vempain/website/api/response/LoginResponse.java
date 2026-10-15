@@ -1,6 +1,7 @@
 package fi.poltsi.vempain.website.api.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import tools.jackson.databind.annotation.JsonNaming;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @Schema(name = "LoginResponse", description = "Successful login")
 public class LoginResponse {
-	@Schema(description = "Issued session token", example = "eyJhbGciOi...")
-	private String token;
+
+    @Schema(description = "Issued session token", example = "eyJhbGciOi...")
+    private String token;
 }
