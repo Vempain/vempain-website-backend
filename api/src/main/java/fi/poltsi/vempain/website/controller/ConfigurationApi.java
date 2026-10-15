@@ -1,5 +1,10 @@
 package fi.poltsi.vempain.website.controller;
 
+import java.util.Map;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+
 import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -7,35 +12,29 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-
-import java.util.Map;
 
 /**
  * REST contract for public website configuration.
  */
 @Tag(name = "Configuration", description = "Public website configuration")
 public interface ConfigurationApi {
-	/** Base path for public endpoints. */
-	String BASE_PATH = "/api/public";
 
-	/**
-	 * Returns the effective public configuration. The keys are the configuration keys stored in the
-	 * site database, so the body is a dynamic string-to-string map (the frontend {@code WebSiteConfiguration}
-	 * model is {@code Record<string, string>}) rather than a fixed DTO.
-	 *
-	 * @return public configuration values keyed by configuration key
-	 */
-	@GetMapping(path = BASE_PATH + "/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
-	@Operation(summary = "Get public configuration", description = "Return the effective public configuration values keyed by configuration key")
-	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Effective public configuration",
-						 content = @Content(schema = @Schema(type = "object", additionalPropertiesSchema = String.class,
-															 example = "{\"site_title\":\"Vempain\"}"),
-											mediaType = MediaType.APPLICATION_JSON_VALUE)),
-			@ApiResponse(responseCode = "500", description = "Unexpected server error",
-						 content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE))
-	})
-	Map<String, String> configuration();
+    /** Base path for public endpoints. */
+    String BASE_PATH = "/api/public";
+
+    /**
+     * Returns the effective public configuration. The keys are the configuration keys stored in the site database, so the body is a dynamic string-to-string
+     * map (the frontend {@code WebSiteConfiguration} model is {@code Record<string, string>}) rather than a fixed DTO.
+     *
+     * @return public configuration values keyed by configuration key
+     */
+    @GetMapping(path = BASE_PATH + "/configuration", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get public configuration", description = "Return the effective public configuration values keyed by configuration key")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Effective public configuration",
+                content = @Content(schema = @Schema(type = "object", additionalPropertiesSchema = String.class, example = "{\"site_title\":\"Vempain\"}"),
+                        mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "500", description = "Unexpected server error",
+                content = @Content(schema = @Schema(implementation = ApiErrorResponse.class), mediaType = MediaType.APPLICATION_JSON_VALUE)) })
+    Map<String, String> configuration();
 }

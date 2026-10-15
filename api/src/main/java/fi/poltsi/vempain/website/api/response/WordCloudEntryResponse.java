@@ -1,6 +1,7 @@
 package fi.poltsi.vempain.website.api.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,8 +18,9 @@ import tools.jackson.databind.annotation.JsonNaming;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @Schema(name = "WordCloudEntryResponse", description = "Subject usage count for the word cloud embed; mirrors the renderer WordCloudEmbedDataItem model")
 public class WordCloudEntryResponse {
-	@Schema(description = "Lower cased subject text", example = "travel")
-	private String text;
-	@Schema(description = "Number of pages, files and galleries using the subject", example = "17")
-	private Long   value;
+
+    @Schema(description = "Lower cased subject text", example = "travel")
+    private String text;
+    @Schema(description = "Number of pages, files and galleries using the subject", example = "17")
+    private Long value;
 }

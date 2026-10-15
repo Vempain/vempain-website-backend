@@ -1,11 +1,12 @@
 package fi.poltsi.vempain.website.repository;
 
-import fi.poltsi.vempain.website.entity.WebSiteUser;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import fi.poltsi.vempain.website.entity.WebSiteUser;
 
 public interface WebSiteUserRepository extends JpaRepository<WebSiteUser, Long> {
 
-	Optional<WebSiteUser> findByUsername(String username);
+    Optional<WebSiteUser> findByUsername(String username);
 }

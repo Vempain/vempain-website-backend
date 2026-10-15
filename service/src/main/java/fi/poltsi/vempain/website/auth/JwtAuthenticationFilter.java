@@ -1,72 +1,70 @@
 package fi.poltsi.vempain.website.auth;
 
-import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
-import fi.poltsi.vempain.website.exception.TokenExpiredException;
+import java.io.IOException;
+import java.util.Optional;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import fi.poltsi.vempain.website.api.response.ApiErrorResponse;
+import fi.poltsi.vempain.website.exception.TokenExpiredException;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-import java.util.Optional;
-
 /**
- * Resolves the caller from the JWT. Handling is deliberately permissive: a missing or
- * malformed token simply leaves the request anonymous, because most of the site is public.
- * An expired token, on the other hand, ends the request with a 401 and clears the cookie
- * so that the frontend can drop its mirrored copy of the token.
+ * Resolves the caller from the JWT. Handling is deliberately permissive: a missing or malformed token simply leaves the request anonymous, because most of the
+ * site is public. An expired token, on the other hand, ends the request with a 401 and clears the cookie so that the frontend can drop its mirrored copy of the
+ * token.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	private final JwtService       jwtService;
-	private final AuthCookieWriter cookieWriter;
-	private final ObjectMapper objectMapper;
+    private final JwtService jwtService;
+    private final AuthCookieWriter cookieWriter;
+    private final ObjectMapper objectMapper;
 
-	public JwtAuthenticationFilter(JwtService jwtService, AuthCookieWriter cookieWriter, ObjectMapper objectMapper) {
-		this.jwtService   = jwtService;
-		this.cookieWriter = cookieWriter;
-		this.objectMapper = objectMapper;
-	}
+    public JwtAuthenticationFilter(JwtService jwtService, AuthCookieWriter cookieWriter, ObjectMapper objectMapper) {
+        this.jwtService = jwtService;
+        this.cookieWriter = cookieWriter;
+        this.objectMapper = objectMapper;
+    }
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request,
-	                                HttpServletResponse response,
-	                                FilterChain filterChain) throws ServletException, IOException {
-		String                      token = cookieWriter.readToken(request);
-		Optional<AuthenticatedUser> user;
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String token = cookieWriter.readToken(request);
+        Optional<AuthenticatedUser> user;
 
-		try {
-			user = jwtService.verify(token);
-		} catch (TokenExpiredException expired) {
-			cookieWriter.clear(response);
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-			response.getWriter()
-					.write(objectMapper.writeValueAsString(ApiErrorResponse.builder()
-																		   .error("Session expired")
-																		   .code("SESSION_EXPIRED")
-																		   .build()));
-			return;
-		}
+        try {
+            user = jwtService.verify(token);
+        } catch (TokenExpiredException expired) {
+            cookieWriter.clear(response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter()
+                .write(objectMapper.writeValueAsString(ApiErrorResponse.builder()
+                    .error("Session expired")
+                    .code("SESSION_EXPIRED")
+                    .build()));
+            return;
+        }
 
-		user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
-		    .ifPresent(authenticated ->
-							   request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, authenticated));
+        user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
+            .ifPresent(authenticated -> request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, authenticated));
 
-		filterChain.doFilter(request, response);
+        filterChain.doFilter(request, response);
 
-		if (user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
-		        .isPresent()
-		    && !response.isCommitted()) {
-			cookieWriter.write(response, jwtService.refresh(user.orElseThrow()), jwtService.ttlSeconds());
-		}
-	}
+        if (user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
+            .isPresent()
+            && !response.isCommitted()) {
+            cookieWriter.write(response, jwtService.refresh(user.orElseThrow()), jwtService.ttlSeconds());
+        }
+    }
 }

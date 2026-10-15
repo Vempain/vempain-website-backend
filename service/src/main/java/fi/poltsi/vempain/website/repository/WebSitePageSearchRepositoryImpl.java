@@ -1,88 +1,85 @@
 package fi.poltsi.vempain.website.repository;
 
-import fi.poltsi.vempain.website.entity.WebSitePage;
-import fi.poltsi.vempain.website.tools.LikePatterns;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import org.springframework.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+
+import org.springframework.util.StringUtils;
+
+import fi.poltsi.vempain.website.entity.WebSitePage;
+import fi.poltsi.vempain.website.tools.LikePatterns;
+
 public class WebSitePageSearchRepositoryImpl implements WebSitePageSearchRepository {
 
-	/**
-	 * Maximum number of search terms turned into LIKE conditions.
-	 */
-	static final int MAX_SEARCH_TERMS = 10;
+    /**
+     * Maximum number of search terms turned into LIKE conditions.
+     */
+    static final int MAX_SEARCH_TERMS = 10;
 
-	private static final String FROM_CLAUSE =
-			" FROM WebSitePage p LEFT JOIN WebSiteAcl a ON a.aclId = p.aclId WHERE "
-			+ WebSitePageRepository.ACCESS_CONDITION;
+    private static final String FROM_CLAUSE = " FROM WebSitePage p LEFT JOIN WebSiteAcl a ON a.aclId = p.aclId WHERE " + WebSitePageRepository.ACCESS_CONDITION;
 
-	@PersistenceContext
-	private EntityManager entityManager;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-	@Override
-	public List<WebSitePage> findAccessiblePages(int page,
-	                                             int perPage,
-	                                             List<String> searchTerms,
-	                                             String sortDirection,
-	                                             String pathPrefix,
-	                                             long userId) {
-		Map<String, Object> parameters = new LinkedHashMap<>();
-		String              where      = buildFilters(searchTerms, pathPrefix, parameters);
-		String              direction  = "asc".equalsIgnoreCase(sortDirection) ? "ASC" : "DESC";
+    @Override
+    public List<WebSitePage> findAccessiblePages(int page, int perPage, List<String> searchTerms, String sortDirection, String pathPrefix, long userId) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        String where = buildFilters(searchTerms, pathPrefix, parameters);
+        String direction = "asc".equalsIgnoreCase(sortDirection) ? "ASC" : "DESC";
 
-		TypedQuery<WebSitePage> query = entityManager.createQuery(
-				"SELECT p" + FROM_CLAUSE + where + " ORDER BY p.published " + direction, WebSitePage.class);
-		query.setParameter("userId", userId);
-		parameters.forEach(query::setParameter);
-		query.setFirstResult(page * perPage);
-		query.setMaxResults(perPage);
+        TypedQuery<WebSitePage> query = entityManager.createQuery("SELECT p" + FROM_CLAUSE + where + " ORDER BY p.published " + direction, WebSitePage.class);
+        query.setParameter("userId", userId);
+        parameters.forEach(query::setParameter);
+        query.setFirstResult(page * perPage);
+        query.setMaxResults(perPage);
 
-		return query.getResultList();
-	}
+        return query.getResultList();
+    }
 
-	@Override
-	public long countAccessiblePages(List<String> searchTerms, String pathPrefix, long userId) {
-		Map<String, Object> parameters = new LinkedHashMap<>();
-		String              where      = buildFilters(searchTerms, pathPrefix, parameters);
+    @Override
+    public long countAccessiblePages(List<String> searchTerms, String pathPrefix, long userId) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        String where = buildFilters(searchTerms, pathPrefix, parameters);
 
-		TypedQuery<Long> query = entityManager.createQuery(
-				"SELECT COUNT(p.id)" + FROM_CLAUSE + where, Long.class);
-		query.setParameter("userId", userId);
-		parameters.forEach(query::setParameter);
+        TypedQuery<Long> query = entityManager.createQuery("SELECT COUNT(p.id)" + FROM_CLAUSE + where, Long.class);
+        query.setParameter("userId", userId);
+        parameters.forEach(query::setParameter);
 
-		return query.getSingleResult();
-	}
+        return query.getSingleResult();
+    }
 
-	private String buildFilters(List<String> searchTerms, String pathPrefix, Map<String, Object> parameters) {
-		StringBuilder where = new StringBuilder();
+    private String buildFilters(List<String> searchTerms, String pathPrefix, Map<String, Object> parameters) {
+        StringBuilder where = new StringBuilder();
 
-		if (StringUtils.hasText(pathPrefix)) {
-			where.append(" AND p.filePath LIKE :filePathPrefix");
-			parameters.put("filePathPrefix", LikePatterns.prefix(pathPrefix));
-		}
+        if (StringUtils.hasText(pathPrefix)) {
+            where.append(" AND p.filePath LIKE :filePathPrefix");
+            parameters.put("filePathPrefix", LikePatterns.prefix(pathPrefix));
+        }
 
-		List<String> terms = searchTerms == null ? List.of() : searchTerms.subList(0, Math.min(searchTerms.size(), MAX_SEARCH_TERMS));
-		if (!terms.isEmpty()) {
-			List<String> expressions = new ArrayList<>();
-			for (int index = 0; index < terms.size(); index++) {
-				String parameter = "term_" + index;
-				expressions.add("(LOWER(p.title) LIKE :" + parameter
-				                + " OR LOWER(p.header) LIKE :" + parameter
-				                + " OR (p.cache IS NOT NULL AND LOWER(p.cache) LIKE :" + parameter + "))");
-				parameters.put(parameter, LikePatterns.containsIgnoreCase(terms.get(index)));
-			}
-			where.append(" AND (")
-			     .append(String.join(" OR ", expressions))
-			     .append(")");
-		}
+        List<String> terms = searchTerms == null ? List.of() : searchTerms.subList(0, Math.min(searchTerms.size(), MAX_SEARCH_TERMS));
+        if (!terms.isEmpty()) {
+            List<String> expressions = new ArrayList<>();
+            for (int index = 0; index < terms.size(); index++) {
+                String parameter = "term_" + index;
+                expressions.add("(LOWER(p.title) LIKE :"
+                        + parameter
+                        + " OR LOWER(p.header) LIKE :"
+                        + parameter
+                        + " OR (p.cache IS NOT NULL AND LOWER(p.cache) LIKE :"
+                        + parameter
+                        + "))");
+                parameters.put(parameter, LikePatterns.containsIgnoreCase(terms.get(index)));
+            }
+            where.append(" AND (")
+                .append(String.join(" OR ", expressions))
+                .append(")");
+        }
 
-		return where.toString();
-	}
+        return where.toString();
+    }
 }

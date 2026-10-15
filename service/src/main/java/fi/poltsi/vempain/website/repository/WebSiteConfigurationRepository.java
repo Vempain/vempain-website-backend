@@ -1,11 +1,12 @@
 package fi.poltsi.vempain.website.repository;
 
-import fi.poltsi.vempain.website.entity.WebSiteConfiguration;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import fi.poltsi.vempain.website.entity.WebSiteConfiguration;
 
 public interface WebSiteConfigurationRepository extends JpaRepository<WebSiteConfiguration, Long> {
 
-	Optional<WebSiteConfiguration> findByConfigKey(String configKey);
+    Optional<WebSiteConfiguration> findByConfigKey(String configKey);
 }
