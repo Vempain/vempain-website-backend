@@ -21,6 +21,7 @@ jobs:
     with:
       install_exiftool: false
       run_test_setup: false
+      publish_api: false
     secrets:
       VEMPAIN_ACTION_TOKEN: ${{ secrets.VEMPAIN_ACTION_TOKEN }}
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
