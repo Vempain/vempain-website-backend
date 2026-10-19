@@ -14,6 +14,7 @@ import fi.poltsi.vempain.website.auth.JwtService;
 import fi.poltsi.vempain.website.auth.PasswordVerifier;
 import fi.poltsi.vempain.website.entity.WebSiteUser;
 import fi.poltsi.vempain.website.exception.ApiException;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.repository.WebSiteUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +29,13 @@ public class AuthController implements AuthApi {
     private final JwtService jwtService;
     private final AuthCookieWriter cookieWriter;
     private final CurrentUserProvider currentUserProvider;
+    private final WebsiteMetrics metrics;
 
     public LoginResponse login(@RequestBody(required = false) LoginRequest request, HttpServletResponse response) {
         if (request == null
             || request.getUsername() == null
             || request.getPassword() == null) {
+            metrics.login(WebsiteMetrics.RESULT_BAD_REQUEST);
             throw ApiException.badRequest("Username and password are required");
         }
 
@@ -40,11 +43,13 @@ public class AuthController implements AuthApi {
             .filter(candidate -> passwordVerifier.matches(request.getPassword(), candidate.getPasswordHash()))
             .orElseThrow(() -> {
                 log.info("Rejected a login attempt for user {}", request.getUsername());
+                metrics.login(WebsiteMetrics.RESULT_INVALID_CREDENTIALS);
                 return ApiException.unauthorized("Invalid credentials");
             });
 
         String token = jwtService.issueToken(user.getId(), user.getUsername(), user.isGlobalPermission());
         cookieWriter.write(response, token, jwtService.ttlSeconds());
+        metrics.login(WebsiteMetrics.RESULT_SUCCESS);
 
         return LoginResponse.builder()
             .token(token)
@@ -53,7 +58,10 @@ public class AuthController implements AuthApi {
 
     public StatusResponse logout(HttpServletResponse response) {
         currentUserProvider.current()
-            .ifPresent(user -> jwtService.revoke(user.token()));
+            .ifPresent(user -> {
+                jwtService.revoke(user.token());
+                metrics.tokenRevoked();
+            });
         cookieWriter.clear(response);
 
         return StatusResponse.builder()

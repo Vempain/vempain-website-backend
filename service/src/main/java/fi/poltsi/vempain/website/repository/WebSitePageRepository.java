@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.repository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,12 @@ public interface WebSitePageRepository extends JpaRepository<WebSitePage, Long>,
             """;
 
     Optional<WebSitePage> findByFilePath(String filePath);
+
+    /**
+     * Publish time of the most recently published page, null when nothing has been published yet.
+     */
+    @Query("SELECT MAX(p.published) FROM WebSitePage p")
+    LocalDateTime findLatestPublished();
 
     List<WebSitePage> findByIdIn(Collection<Long> ids);
 

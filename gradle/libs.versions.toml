@@ -7,6 +7,8 @@ spring-dependency-management = "1.1.7"
 springdoc = "3.1.1"
 swagger = "2.2.55"
 freefair-lombok = "9.8.0"
+# MaxMind GeoLite2 reader of the access log country lookup
+geoip2 = "4.3.0"
 
 [plugins]
 freefair-lombok = { id = "io.freefair.lombok", version.ref = "freefair-lombok" }

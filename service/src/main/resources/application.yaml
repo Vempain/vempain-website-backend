@@ -1,14 +1,42 @@
 server:
   port: 8000
+  # none|native|framework: use framework behind a reverse proxy so that the scheme and host of generated URLs follow the X-Forwarded-* headers
+  forward-headers-strategy: ${VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY:none}
   # The frontend links to files whose names may contain characters that Tomcat rejects by
   # default; the PHP built-in server accepted them, so keep the behaviour.
   tomcat:
     relaxed-path-chars: "[,]"
     relaxed-query-chars: "[,]"
+    # Tomcat thread pool and connector meters (tomcat.*) need the MBean registry
+    mbeanregistry:
+      enabled: true
 
 management:
   server:
     port: 8081
+  endpoints:
+    web:
+      exposure:
+        # Only the health probe is served on the management port; metrics leave the service by OTLP push, nothing is scraped
+        include: health
+  otlp:
+    metrics:
+      export:
+        # The endpoint, credentials and certificate come from vempain.metrics.* through MetricsExportEnvironmentPostProcessor
+        enabled: ${vempain.metrics.enabled}
+        base-time-unit: seconds
+  metrics:
+    tags:
+      application: vempain-website-backend
+      role: ${VEMPAIN_METRICS_ROLE:api}
+      instance: ${HOSTNAME:local}
+  tracing:
+    # Off unless VEMPAIN_TRACING_ENABLED=true; the Tempo endpoint, sampling, credentials and certificate come from vempain.tracing.* /
+    # vempain.metrics.* through MetricsExportEnvironmentPostProcessor. Incoming traceparent headers are continued (W3C, B3 consumed).
+    enabled: ${vempain.tracing.enabled}
+    export:
+      # Also drives Boot's log correlation: with tracing off the console pattern stays without the [app,traceId,spanId] block
+      enabled: ${vempain.tracing.enabled}
 
 spring:
   application:
@@ -17,6 +45,8 @@ spring:
     url: override-me
     username: override-me
     password: override-me
+    hikari:
+      pool-name: site
   jpa:
     open-in-view: false
     hibernate:
@@ -38,6 +68,29 @@ vempain:
     jwt-cookie-name: OXALATE_JWT_TOKEN
     jwt-cookie-secure: true
     cors-allowed-origins: override-me
+    # Real client address behind a reverse proxy (none|cloudflare|forwarded); headers are trusted only in the matching mode
+    proxy:
+      mode: ${VEMPAIN_SITE_PROXY_MODE:none}
+      trusted-header: ${VEMPAIN_SITE_PROXY_TRUSTED_HEADER:}
+    # Optional MaxMind GeoLite2-Country database for the country of the access log; Cloudflare's CF-IPCountry wins when present
+    geoip:
+      database: ${VEMPAIN_SITE_GEOIP_DATABASE:}
+    # One JSON line per request on stdout through the logger vempain.site.access (shipped to Loki by the host's log collector)
+    access-log:
+      enabled: ${VEMPAIN_SITE_ACCESS_LOG_ENABLED:true}
+  # Push of the application metrics to the monitoring host (Prometheus OTLP receiver behind basic auth and a self-signed certificate)
+  metrics:
+    enabled: ${VEMPAIN_METRICS_ENABLED:false}
+    url: ${VEMPAIN_METRICS_URL:}
+    username: ${VEMPAIN_METRICS_USERNAME:}
+    password: ${VEMPAIN_METRICS_PASSWORD:}
+    certificate: ${VEMPAIN_METRICS_CERTIFICATE:}
+    step: ${VEMPAIN_METRICS_STEP:1m}
+  # Push of the request spans to the Tempo receiver of the monitoring host (same basic auth and certificate as the metrics)
+  tracing:
+    enabled: ${VEMPAIN_TRACING_ENABLED:false}
+    url: ${VEMPAIN_TRACING_URL:}
+    sampling: ${VEMPAIN_TRACING_SAMPLING:1.0}
 
 logging:
   level:

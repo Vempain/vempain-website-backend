@@ -21,13 +21,15 @@ Everything else - embed parsing, the dynamic
 
 Kept deliberately small; there is no third-party JWT, mapping or utility library:
 
-| Dependency                            | Why                                                                 |
+|              Dependency               |                                 Why                                 |
 |---------------------------------------|---------------------------------------------------------------------|
 | `spring-boot-starter-web`             | REST controllers, JSON, embedded Tomcat                             |
 | `spring-boot-starter-data-jpa`        | entity mapping and `JdbcTemplate` for the native PostgreSQL queries |
 | `postgresql`                          | JDBC driver                                                         |
 | `spring-security-crypto`              | bcrypt verification of the existing password hashes                 |
 | `springdoc-openapi-starter-webmvc-ui` | OpenAPI document and Swagger UI                                     |
+| `spring-boot-starter-actuator`        | health probe on the management port and the Micrometer meters       |
+| `micrometer-registry-otlp`            | OTLP/HTTP push of the meters to the monitoring host                 |
 | `spring-boot-starter-test`            | tests only                                                          |
 | `testcontainers-junit-jupiter`        | JUnit 5 integration-test support                                    |
 | `testcontainers-postgresql`           | PostgreSQL container support for integration tests                  |
@@ -42,19 +44,83 @@ JWT signing and verification (HS256) is implemented directly on the JDK crypto A
 
 Every setting is bound to the environment variables used by the current Vempain deployment.
 
-| Environment variable             | Property                                            | Default                         |
-|----------------------------------|-----------------------------------------------------|---------------------------------|
-| `ENV_VEMPAIN_SITE_DB_HOST`       | `spring.datasource.url`                             | `127.0.0.1`                     |
-| `ENV_VEMPAIN_SITE_DB_PORT`       | `spring.datasource.url`                             | `5434`                          |
-| `ENV_VEMPAIN_SITE_DB_NAME`       | `spring.datasource.url`                             | `vempain_site_db`               |
-| `ENV_VEMPAIN_SITE_DB_SCHEMA`     | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                  |
-| `ENV_VEMPAIN_SITE_DB_USER`       | `spring.datasource.username`                        | `vempain_site`                  |
-| `ENV_VEMPAIN_SITE_DB_PASSWORD`   | `spring.datasource.password`                        | -                               |
-| `JWT_SECRET`                     | `vempain.site.jwt-secret`                           | required (no fallback)          |
-| `JWT_TTL_SECONDS`                | `vempain.site.jwt-ttl-seconds`                      | `1200`                          |
-| `COOKIE_SECURE`                  | `vempain.site.jwt-cookie-secure`                    | `true` (local profile: `false`) |
-| `VEMPAIN_WEBSITE_WEB_ROOT`       | `vempain.site.files-root`                           | `/files`                        |
-| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS` | `vempain.site.cors-allowed-origins`                 | no cross-origin requests        |
+|          Environment variable           |                      Property                       |               Default               |
+|-----------------------------------------|-----------------------------------------------------|-------------------------------------|
+| `ENV_VEMPAIN_SITE_DB_HOST`              | `spring.datasource.url`                             | `127.0.0.1`                         |
+| `ENV_VEMPAIN_SITE_DB_PORT`              | `spring.datasource.url`                             | `5434`                              |
+| `ENV_VEMPAIN_SITE_DB_NAME`              | `spring.datasource.url`                             | `vempain_site_db`                   |
+| `ENV_VEMPAIN_SITE_DB_SCHEMA`            | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                      |
+| `ENV_VEMPAIN_SITE_DB_USER`              | `spring.datasource.username`                        | `vempain_site`                      |
+| `ENV_VEMPAIN_SITE_DB_PASSWORD`          | `spring.datasource.password`                        | -                                   |
+| `JWT_SECRET`                            | `vempain.site.jwt-secret`                           | required (no fallback)              |
+| `JWT_TTL_SECONDS`                       | `vempain.site.jwt-ttl-seconds`                      | `1200`                              |
+| `COOKIE_SECURE`                         | `vempain.site.jwt-cookie-secure`                    | `true` (local profile: `false`)     |
+| `VEMPAIN_WEBSITE_WEB_ROOT`              | `vempain.site.files-root`                           | `/files`                            |
+| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS`        | `vempain.site.cors-allowed-origins`                 | no cross-origin requests            |
+| `VEMPAIN_METRICS_ENABLED`               | `vempain.metrics.enabled`                           | `false`                             |
+| `VEMPAIN_METRICS_URL`                   | `vempain.metrics.url`                               | - (OTLP/HTTP metrics endpoint)      |
+| `VEMPAIN_METRICS_USERNAME`              | `vempain.metrics.username`                          | - (basic auth of the endpoint)      |
+| `VEMPAIN_METRICS_PASSWORD`              | `vempain.metrics.password`                          | -                                   |
+| `VEMPAIN_METRICS_CERTIFICATE`           | `vempain.metrics.certificate`                       | - (PEM to trust, self-signed)       |
+| `VEMPAIN_METRICS_STEP`                  | `vempain.metrics.step`                              | `1m`                                |
+| `VEMPAIN_METRICS_ROLE`                  | `management.metrics.tags.role`                      | `api`                               |
+| `VEMPAIN_TRACING_ENABLED`               | `vempain.tracing.enabled`                           | `false`                             |
+| `VEMPAIN_TRACING_URL`                   | `vempain.tracing.url`                               | - (OTLP/HTTP traces endpoint)       |
+| `VEMPAIN_TRACING_SAMPLING`              | `vempain.tracing.sampling`                          | `1.0` (0..1 of traces kept)         |
+| `VEMPAIN_SITE_PROXY_MODE`               | `vempain.site.proxy.mode`                           | `none` (`cloudflare`, `forwarded`)  |
+| `VEMPAIN_SITE_PROXY_TRUSTED_HEADER`     | `vempain.site.proxy.trusted-header`                 | - (the mode's default header)       |
+| `VEMPAIN_SITE_GEOIP_DATABASE`           | `vempain.site.geoip.database`                       | - (GeoLite2-Country `.mmdb`)        |
+| `VEMPAIN_SITE_ACCESS_LOG_ENABLED`       | `vempain.site.access-log.enabled`                   | `true`                              |
+| `VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY` | `server.forward-headers-strategy`                   | `none` (`framework` behind a proxy) |
+
+## Metrics
+
+The backend pushes its metrics over OTLP/HTTP to the Prometheus receiver of the monitoring host (`vempain-cluster/monitoring`); nothing
+is scraped and the management port (`8081`) serves only the health probe. Set `VEMPAIN_METRICS_ENABLED=true`, the endpoint URL
+(`https://grafana.intra.poltsi.fi/prometheus/api/v1/otlp/v1/metrics`), the basic auth credentials and, because the endpoint uses a
+self-signed certificate, the path of the PEM certificate to trust (mounted read-only into the container). Every meter carries the
+`application`, `role` and `instance` tags.
+
+Besides the Spring Boot meters (JVM, HTTP server requests, Hikari pool `site`, Tomcat, Logback, repository invocations) the site records:
+
+- `vempain.site.resource.requests{result=served|not_found|denied}` and `vempain.site.resource.bytes` for `/file/...`
+- `vempain.site.page.views{path}` for page reads (`unknown` for a missing page, so the tag set stays bounded)
+- `vempain.site.logins{result=success|invalid_credentials|bad_request}`, `vempain.site.tokens.active`, `vempain.site.tokens.revoked`
+- `vempain.site.search.duration` and `vempain.site.search.results` for subject searches
+- `vempain.site.embed.requests{type,result}` and `vempain.site.opengraph.requests{format,result}`
+- `vempain.site.last_publish.age.seconds`, the age of the newest published page (NaN before the first publish)
+
+## Tracing
+
+With `VEMPAIN_TRACING_ENABLED=true` the backend takes part in distributed tracing (Spring Boot `spring-boot-starter-opentelemetry`,
+Micrometer Tracing with the OpenTelemetry bridge). An incoming W3C `traceparent` header, sent by the website frontend's API client or
+injected by Traefik, is continued: the request runs in that trace, every log line of the request carries the trace and span ids (Spring Boot's console pattern
+becomes `... --- [vempain-website-backend] [thread] [vempain-website-backend,<traceId>,<spanId>] logger : message`),
+the access log line carries them as `trace_id` and `span_id`, and the spans are pushed over OTLP/HTTP to the Tempo receiver of the
+monitoring host (`VEMPAIN_TRACING_URL`, for example `https://grafana.intra.poltsi.fi/tempo/v1/traces`) with the same basic auth
+credentials and certificate as the metrics (`VEMPAIN_METRICS_USERNAME`, `VEMPAIN_METRICS_PASSWORD`, `VEMPAIN_METRICS_CERTIFICATE`).
+`VEMPAIN_TRACING_SAMPLING` is the fraction of new traces that are kept (a trace started by the caller keeps the caller's decision).
+CORS allows the `traceparent` and `tracestate` request headers and exposes `X-Request-Id`. Tracing off (the default) leaves the log
+pattern and the access line as before, with null trace fields.
+
+## Traffic: access log and client resolution
+
+Every request (except the `/health` probe) ends with one JSON line on stdout through the logger `vempain.site.access`, and every response
+carries an `X-Request-Id` header with the same id as the line. The host's log collector (`vempain-cluster/website`, Grafana Alloy) ships the
+lines to Loki, where the request detail that must not become a metric label lives: client address, user agent, path, query, referer, user.
+The fields are `ts`, `type` (`access`), `method`, `path`, `query`, `status`, `duration_ms`, `bytes`, `client_ip`, `client_source`
+(`socket|cloudflare|forwarded`), `country`, `user_agent`, `referer`, `bot`, `user`, `request_id`, `trace_id` and `span_id` (the
+last two null without tracing). The low-cardinality part is also
+pushed as metrics: `vempain.site.access.requests{status_class,method,client_source,bot}`, `vempain.site.access.duration{status_class}`
+and `vempain.site.access.country{country}`, so request rates, 4xx/5xx error rates and latency are available in Prometheus.
+
+The real client address depends on what runs in front of the service. `VEMPAIN_SITE_PROXY_MODE=none` (the default) takes the socket
+address and ignores every proxy header, because a client can send them itself. `cloudflare` reads `CF-Connecting-IP` and the country from
+`CF-IPCountry`; `forwarded` reads the first address of `X-Forwarded-For`, then `X-Real-IP`. `VEMPAIN_SITE_PROXY_TRUSTED_HEADER` overrides
+the header of the mode. Behind a proxy also set `VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY=framework` so that generated URLs use the
+forwarded scheme and host. Without Cloudflare the country comes from an optional MaxMind GeoLite2-Country database (`VEMPAIN_SITE_GEOIP_DATABASE`, mounted
+read-only; the database is not shipped, it needs a MaxMind account and licence) and is `unknown`
+otherwise. Private and loopback addresses are never looked up. `VEMPAIN_SITE_ACCESS_LOG_ENABLED=false` switches the whole filter off.
 
 ## Authentication
 

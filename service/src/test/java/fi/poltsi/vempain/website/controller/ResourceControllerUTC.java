@@ -18,10 +18,12 @@ import fi.poltsi.vempain.website.api.response.WebSiteFileResponse;
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.config.SiteProperties;
 import fi.poltsi.vempain.website.entity.WebSiteFile;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.service.ResourceAccessService;
 import fi.poltsi.vempain.website.service.ResponseMapperService;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,7 +41,8 @@ class ResourceControllerUTC {
     private final ResourceAccessService access = mock(ResourceAccessService.class);
     private final CurrentUserProvider user = mock(CurrentUserProvider.class);
     private final SiteProperties properties = new SiteProperties();
-    private final ResourceController controller = new ResourceController(files, galleries, mapper, access, user, properties);
+    private final ResourceController controller = new ResourceController(files, galleries, mapper, access, user, properties,
+            new WebsiteMetrics(new SimpleMeterRegistry()));
 
     @Test
     void publicApiPathStreamsFileContent(@TempDir Path root) throws Exception {

@@ -10,10 +10,12 @@ import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.entity.WebSiteFile;
 import fi.poltsi.vempain.website.entity.WebSiteGallery;
 import fi.poltsi.vempain.website.entity.WebSitePage;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.repository.WebGpsLocationRepository;
 import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.repository.WebSitePageRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +31,8 @@ class SubjectSearchServiceUTC {
     private final SubjectLookupService subjects = mock(SubjectLookupService.class);
     private final CurrentUserProvider currentUser = mock(CurrentUserProvider.class);
     private final ResponseMapperService mapper = new ResponseMapperService(subjects, mock(WebGpsLocationRepository.class), currentUser, new ObjectMapper());
-    private final SubjectSearchService service = new SubjectSearchService(pages, galleries, files, mapper);
+    private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
+    private final SubjectSearchService service = new SubjectSearchService(pages, galleries, files, mapper, new WebsiteMetrics(registry));
 
     @Test
     void emptySubjectListReturnsEmptyPagedSections() {

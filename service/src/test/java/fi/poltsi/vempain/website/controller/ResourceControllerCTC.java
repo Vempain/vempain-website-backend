@@ -21,10 +21,12 @@ import fi.poltsi.vempain.website.entity.WebSiteFile;
 import fi.poltsi.vempain.website.entity.WebSiteGallery;
 import fi.poltsi.vempain.website.exception.ApiException;
 import fi.poltsi.vempain.website.exception.ApiExceptionHandler;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.service.ResourceAccessService;
 import fi.poltsi.vempain.website.service.ResponseMapperService;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -50,11 +52,13 @@ class ResourceControllerCTC {
     CurrentUserProvider user;
     private SiteProperties properties;
     private MockMvc mvc;
+    private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
+    private final WebsiteMetrics metrics = new WebsiteMetrics(registry);
 
     @BeforeEach
     void setUp() {
         properties = new SiteProperties();
-        mvc = MockMvcBuilders.standaloneSetup(new ResourceController(files, galleries, mapper, access, user, properties))
+        mvc = MockMvcBuilders.standaloneSetup(new ResourceController(files, galleries, mapper, access, user, properties, metrics))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
     }

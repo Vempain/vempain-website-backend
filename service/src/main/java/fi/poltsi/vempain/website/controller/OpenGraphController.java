@@ -10,6 +10,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import fi.poltsi.vempain.website.api.response.OpenGraphResponse;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.service.OpenGraphService;
 import fi.poltsi.vempain.website.tools.OpenGraphHtml;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +20,29 @@ import lombok.RequiredArgsConstructor;
 public class OpenGraphController implements OpenGraphApi {
 
     private final OpenGraphService service;
+    private final WebsiteMetrics metrics;
 
     public OpenGraphResponse openGraph(HttpServletRequest request) {
-        return service.forRoute(route(request));
+        return metadata("json", request);
     }
 
     public String openGraphHtml(HttpServletRequest request, @RequestHeader(value = ORIGIN_HEADER, required = false) String origin) {
         String trusted = OpenGraphHtml.validOrigin(origin);
-        return OpenGraphHtml.render(service.forRoute(route(request)), trusted != null ? trusted : requestOrigin(request));
+        return OpenGraphHtml.render(metadata("html", request), trusted != null ? trusted : requestOrigin(request));
+    }
+
+    /**
+     * The metadata of the requested route, counted by the format a crawler or the frontend asked for.
+     */
+    private OpenGraphResponse metadata(String format, HttpServletRequest request) {
+        try {
+            OpenGraphResponse response = service.forRoute(route(request));
+            metrics.openGraphRequest(format, WebsiteMetrics.RESULT_OK);
+            return response;
+        } catch (RuntimeException e) {
+            metrics.openGraphRequest(format, WebsiteMetrics.RESULT_ERROR);
+            throw e;
+        }
     }
 
     /**

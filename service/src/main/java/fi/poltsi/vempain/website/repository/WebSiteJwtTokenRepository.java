@@ -15,6 +15,12 @@ public interface WebSiteJwtTokenRepository extends JpaRepository<WebSiteJwtToken
     @Query("SELECT t FROM WebSiteJwtToken t WHERE t.token = :token AND t.expiresAt > :now")
     Optional<WebSiteJwtToken> findValidToken(@Param("token") String token, @Param("now") LocalDateTime now);
 
+    /**
+     * Number of issued tokens that have not expired: the active visitor sessions.
+     */
+    @Query("SELECT COUNT(t) FROM WebSiteJwtToken t WHERE t.expiresAt > :now")
+    long countValid(@Param("now") LocalDateTime now);
+
     @Modifying
     @Query("DELETE FROM WebSiteJwtToken t WHERE t.token = :token")
     int deleteByToken(@Param("token") String token);
