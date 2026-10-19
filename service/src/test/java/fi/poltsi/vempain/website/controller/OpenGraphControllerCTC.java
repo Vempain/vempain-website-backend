@@ -13,7 +13,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import fi.poltsi.vempain.website.api.response.OpenGraphResponse;
 import fi.poltsi.vempain.website.exception.ApiExceptionHandler;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.service.OpenGraphService;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -28,10 +30,12 @@ class OpenGraphControllerCTC {
     @Mock
     OpenGraphService service;
     private MockMvc mvc;
+    private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
+    private final WebsiteMetrics metrics = new WebsiteMetrics(registry);
 
     @BeforeEach
     void setUp() {
-        mvc = MockMvcBuilders.standaloneSetup(new OpenGraphController(service))
+        mvc = MockMvcBuilders.standaloneSetup(new OpenGraphController(service, metrics))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
     }

@@ -18,7 +18,10 @@ no frontend or lockfile in this repository.
 Endpoint inventory: `/health` is deliberate liveness; `/api/login` is deliberate anonymous authentication;
 `/api/logout` is deliberately idempotent; public page, gallery, file, embed, subject and configuration reads are
 deliberately anonymous but ACL-filtered where applicable. Page/file ID, content, directory and raw-file routes enforce
-ACL checks. No actuator endpoint is included. Swagger/OpenAPI is available only outside the `prod` profile.
+ACL checks. The actuator exposes only the health probe on the separate management port (`8081`, not published by the compose
+files); application metrics leave the service by authenticated OTLP push and no metrics endpoint is served. Every request is also written as a structured access
+line (client address, user agent, path, status, duration, user) to stdout for the host's log collector; see the 2026-10-19 addition. Swagger/OpenAPI is
+available only outside the `prod` profile.
 
 ## Phase 1 — threat model
 
@@ -35,7 +38,7 @@ ACL checks. No actuator endpoint is included. Swagger/OpenAPI is available only 
 | Category                                 | Verdict                       | Evidence / rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 |------------------------------------------|-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | A01 Broken Access Control                | **FIXED / PASS**              | ACL checks are centralized in `ResourceAccessService`/`AclService`; child pages now use an ownership-scoped query; persisted-token validation precedes global permission and refresh; raw files enforce lexical and real-path containment. Public routes are documented above.                                                                                                                                                                                                                                                           |
-| A02 Security Misconfiguration            | **FIXED / MEDIUM REMEDIATED** | JWT fallback removed, secure cookies default on, CORS now fails closed, generic malformed-request errors, browser security headers, and non-root runtime image added. Production Swagger is disabled; no actuator is present.                                                                                                                                                                                                                                                                                                            |
+| A02 Security Misconfiguration            | **FIXED / MEDIUM REMEDIATED** | JWT fallback removed, secure cookies default on, CORS now fails closed, generic malformed-request errors, browser security headers, and non-root runtime image added. Production Swagger is disabled; the actuator serves only the health probe on the management port.                                                                                                                                                                                                                                                                  |
 | A03 Software Supply Chain Failures       | **PASS / INFO**               | Gradle dependencies use pinned project/BOM versions and HTTPS Maven registries. CI uses a floating reusable workflow and no SBOM task is present; add SHA pinning and CycloneDX in delivery policy. No dependency scanner was configured, so transitive freshness is **UNVERIFIED**.                                                                                                                                                                                                                                                     |
 | A04 Cryptographic Failures               | **FIXED / PASS**              | HS256 requires configured `JWT_SECRET`; tokens expire and are persisted for revocation; auth cookies are HttpOnly, SameSite=Lax and Secure by default. Secret rotation and minimum entropy remain deployment responsibilities.                                                                                                                                                                                                                                                                                                           |
 | A05 Injection                            | **FIXED / PASS**              | All request values are bound parameters (JPA/native). Dynamic SQL structure exists only in `PublishedDataService` (publisher table name, sort column, direction) and is now built from server-side constants: `MusicSortColumn`/`SortDirection` enums and `SqlIdentifiers` quoting of the table name returned by `information_schema`. `LIKE`/`ILIKE` patterns are escaped and length-capped through `LikePatterns` (page search, subject autocomplete, music search). No command, URL, XML or template sink. See the A05 finding below. |
@@ -137,3 +140,30 @@ backslashes and control characters; the route is read from the request path and 
 parameters; the `X-Vempain-Origin` header is accepted only as a plain `scheme://host[:port]` value (otherwise the request origin is
 used), so it cannot inject markup or a `javascript:` URL. Verification: `OpenGraphServiceUTC`, `OpenGraphHtmlUTC`,
 `OpenGraphControllerCTC`, `ResponseContractJTC`.
+
+### 2026-10-19 — Access log, proxy-aware client address and request metrics
+
+`traffic/AccessLogFilter` writes one JSON line per request (logger `vempain.site.access`, stdout) with the client address, user agent,
+referer, path, query, status, duration, response size, the login of an authenticated visitor and a per-request id that is also returned as
+`X-Request-Id`; `WebsiteMetrics` additionally counts requests by status class, method, address source, bot flag and country. Personal
+data (A01/A09): the address, user agent and user are personal data under the GDPR; they are kept only in the log stream, never as metric
+labels, the health probe is not logged, and retention is that of the Loki instance of the monitoring environment (30 days); the log can be
+switched off with `VEMPAIN_SITE_ACCESS_LOG_ENABLED=false`. Header trust (A05/A07): proxy headers are read only in the configured
+`vempain.site.proxy.mode` (`cloudflare`: `CF-Connecting-IP`/`CF-IPCountry`; `forwarded`: `X-Forwarded-For`/`X-Real-IP`; an optional
+`trusted-header`); in the default `none` mode every such header is ignored, so a client cannot spoof its address or country into the log
+unless the deployment declares a proxy that overwrites those headers. Header values are bounded (first address only, 64 characters, user
+agent truncated to 512, two-letter country) and the line is produced by the JSON serializer, so log injection through headers is not
+possible. The optional GeoLite2 database is read-only and local; a missing or corrupt file disables the lookup instead of failing the
+service. Verification: `ClientRequestResolverUTC`, `GeoIpCountryLookupUTC`, `AccessLogFilterUTC`, `AccessLogFilterCTC`,
+`WebsiteMetricsUTC`, `SitePropertiesUTC`.
+
+### 2026-10-19 — Distributed tracing
+
+`spring-boot-starter-opentelemetry` continues an incoming W3C `traceparent` (frontend or Traefik) and, with `VEMPAIN_TRACING_ENABLED=true`,
+pushes the request spans over OTLP/HTTP to the Tempo receiver of the monitoring environment, authenticated with the same basic auth
+credentials and self-signed certificate as the metrics push (A02/A05: the trace export is off by default and never unauthenticated or
+unverified). Trace and span ids are random identifiers, not personal data; a span carries the request path and status but no client
+address, user agent or body, and the Tempo retention (7 days by default) is shorter than the Loki one. The ids are added to every log
+line and to the access log line (`trace_id`, `span_id`); CORS additionally allows the `traceparent`/`tracestate` request headers and
+exposes `X-Request-Id`. A caller can choose its own trace id but cannot read or affect other requests through it (A01). Verification:
+`TraceContinuationCTC`, `AccessLogFilterUTC`, `MetricsExportEnvironmentPostProcessorUTC`.

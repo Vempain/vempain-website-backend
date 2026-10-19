@@ -12,6 +12,7 @@ import fi.poltsi.vempain.website.api.response.PagedResponse;
 import fi.poltsi.vempain.website.api.response.WebSitePageResponse;
 import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.entity.WebSitePage;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.service.PageService;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,7 @@ public class PageController implements PageApi {
 
     private final PageService service;
     private final CurrentUserProvider user;
+    private final WebsiteMetrics metrics;
 
     public PagedResponse<WebSitePageResponse> pages(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "desc") String sort, @RequestParam(defaultValue = "") String search, @RequestParam(required = false) String path) {
@@ -28,9 +30,7 @@ public class PageController implements PageApi {
     }
 
     public WebSitePageResponse page(@PathVariable long id) {
-        WebSitePage page = service.byId(id);
-        service.require(page);
-        return service.page(page);
+        return view(service.byId(id));
     }
 
     public PagedResponse<WebSitePageResponse> publicPages(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size,
@@ -51,8 +51,18 @@ public class PageController implements PageApi {
     }
 
     public WebSitePageResponse content(@RequestParam("file_path") String path) {
-        WebSitePage page = service.byPath(path);
+        return view(service.byPath(path));
+    }
+
+    /**
+     * A page the caller may read counts as a view of its path; a page that does not exist counts under {@code unknown} so that the tag set stays bounded.
+     */
+    private WebSitePageResponse view(WebSitePage page) {
+        if (page == null) {
+            metrics.pageView(WebsiteMetrics.UNKNOWN_PATH);
+        }
         service.require(page);
+        metrics.pageView(page.getFilePath());
         return service.page(page);
     }
 }

@@ -23,6 +23,7 @@ import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.config.SiteProperties;
 import fi.poltsi.vempain.website.entity.WebSiteFile;
 import fi.poltsi.vempain.website.exception.ApiException;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.repository.WebSiteFileRepository;
 import fi.poltsi.vempain.website.repository.WebSiteGalleryRepository;
 import fi.poltsi.vempain.website.service.ResourceAccessService;
@@ -39,6 +40,7 @@ public class ResourceController implements ResourceApi {
     private final ResourceAccessService access;
     private final CurrentUserProvider user;
     private final SiteProperties props;
+    private final WebsiteMetrics metrics;
 
     public PagedResponse<WebSiteFileResponse> listFiles(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int perPage) {
         List<WebSiteFile> all = files.findAllFilesForUser(user.currentUserId());
@@ -87,20 +89,28 @@ public class ResourceController implements ResourceApi {
                 .orElse(null);
         }
         if (entity == null) {
+            metrics.resourceRequest(WebsiteMetrics.RESULT_NOT_FOUND);
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .build();
         }
 
-        access.requireAccess(entity.getAclId());
+        try {
+            access.requireAccess(entity.getAclId());
+        } catch (ApiException denied) {
+            metrics.resourceRequest(WebsiteMetrics.RESULT_DENIED);
+            throw denied;
+        }
         Path root = Paths.get(props.getFilesRoot())
             .toAbsolutePath()
             .normalize();
         if (!Files.isDirectory(root)) {
+            metrics.resourceRequest(WebsiteMetrics.RESULT_NOT_FOUND);
             return ResponseEntity.notFound()
                 .build();
         }
         Path target = resolveTarget(root, relativePath);
         if (target == null) {
+            metrics.resourceRequest(WebsiteMetrics.RESULT_NOT_FOUND);
             return ResponseEntity.notFound()
                 .build();
         }
@@ -115,6 +125,7 @@ public class ResourceController implements ResourceApi {
             return partialResponse(target, length, headers, range);
         }
         headers.setContentLength(length);
+        metrics.resourceServed(length);
         return ResponseEntity.ok()
             .headers(headers)
             .body(new FileSystemResource(target));
@@ -154,6 +165,7 @@ public class ResourceController implements ResourceApi {
         }
         headers.setContentLength(end - start + 1);
         headers.set("Content-Range", "bytes " + start + "-" + end + "/" + length);
+        metrics.resourceServed(end - start + 1);
         java.io.InputStream input = Files.newInputStream(target);
         input.skipNBytes(start);
         return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)

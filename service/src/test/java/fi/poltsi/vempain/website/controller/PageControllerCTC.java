@@ -18,7 +18,9 @@ import fi.poltsi.vempain.website.auth.CurrentUserProvider;
 import fi.poltsi.vempain.website.entity.WebSitePage;
 import fi.poltsi.vempain.website.exception.ApiException;
 import fi.poltsi.vempain.website.exception.ApiExceptionHandler;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.service.PageService;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -40,10 +42,12 @@ class PageControllerCTC {
     @Mock
     CurrentUserProvider user;
     private MockMvc mvc;
+    private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
+    private final WebsiteMetrics metrics = new WebsiteMetrics(registry);
 
     @BeforeEach
     void setUp() {
-        mvc = MockMvcBuilders.standaloneSetup(new PageController(pages, user))
+        mvc = MockMvcBuilders.standaloneSetup(new PageController(pages, user, metrics))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
     }

@@ -17,7 +17,9 @@ import fi.poltsi.vempain.website.auth.JwtService;
 import fi.poltsi.vempain.website.auth.PasswordVerifier;
 import fi.poltsi.vempain.website.entity.WebSiteUser;
 import fi.poltsi.vempain.website.exception.ApiExceptionHandler;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.repository.WebSiteUserRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -40,10 +42,12 @@ class AuthControllerCTC {
     @Mock
     CurrentUserProvider currentUser;
     private MockMvc mvc;
+    private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
+    private final WebsiteMetrics metrics = new WebsiteMetrics(registry);
 
     @BeforeEach
     void setUp() {
-        mvc = MockMvcBuilders.standaloneSetup(new AuthController(users, passwords, jwt, cookies, currentUser))
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(users, passwords, jwt, cookies, currentUser, metrics))
             .setControllerAdvice(new ApiExceptionHandler())
             .build();
     }

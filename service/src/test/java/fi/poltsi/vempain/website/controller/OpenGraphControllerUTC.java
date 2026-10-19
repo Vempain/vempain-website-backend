@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import fi.poltsi.vempain.website.api.response.OpenGraphResponse;
+import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import fi.poltsi.vempain.website.service.OpenGraphService;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,7 +20,7 @@ import static org.mockito.Mockito.when;
 class OpenGraphControllerUTC {
 
     private final OpenGraphService service = mock(OpenGraphService.class);
-    private final OpenGraphController controller = new OpenGraphController(service);
+    private final OpenGraphController controller = new OpenGraphController(service, new WebsiteMetrics(new SimpleMeterRegistry()));
 
     @Test
     void contextPathIsStrippedBeforeTheRouteIsDecoded() {

@@ -21,8 +21,10 @@ public class CorsFilterConfiguration {
     FilterRegistrationBean<CorsFilter> corsFilterRegistration(SiteProperties siteProperties) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With", "X-Auth-Token"));
-        configuration.setExposedHeaders(List.of("X-Auth-Token"));
+        // traceparent/tracestate: the W3C trace context the frontend sends so that its API calls join one trace
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With", "X-Auth-Token", "traceparent", "tracestate"));
+        // X-Request-Id: the per-request id of the access log, readable by the frontend for support cases
+        configuration.setExposedHeaders(List.of("X-Auth-Token", "X-Request-Id"));
         configuration.setAllowCredentials(true);
 
         List<String> origins = siteProperties.getCorsAllowedOrigins()
