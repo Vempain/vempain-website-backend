@@ -4,7 +4,9 @@ WORKDIR /build
 
 COPY gradlew settings.gradle build.gradle ./
 COPY gradle/libs.versions.toml gradle/libs.versions.toml
+COPY gradle/team-convention.gradle gradle/team-convention.gradle
 COPY gradle/wrapper ./gradle/wrapper
+COPY .config .config
 COPY api/build.gradle api/build.gradle
 COPY service/build.gradle service/build.gradle
 RUN ./gradlew dependencies --no-daemon
