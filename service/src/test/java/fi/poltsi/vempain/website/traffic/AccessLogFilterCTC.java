@@ -21,6 +21,7 @@ import fi.poltsi.vempain.website.controller.HealthController;
 import fi.poltsi.vempain.website.exception.TokenExpiredException;
 import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,7 +72,8 @@ class AccessLogFilterCTC {
 
     private Map<String, Object> line(int index) {
         return objectMapper.readValue(lines.list.get(index)
-            .getFormattedMessage(), Map.class);
+            .getFormattedMessage(), new TypeReference<Map<String, Object>>() {
+            });
     }
 
     @Test

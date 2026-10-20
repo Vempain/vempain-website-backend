@@ -1,25 +1,38 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.freefair.lombok)
+    alias(libs.plugins.spring.dependency.management)
 	id 'jacoco'
-	alias(libs.plugins.freefair.lombok)
-}
-
-group = 'fi.poltsi.vempain'
-version = libs.versions.release.get()
-
-bootJar {
-	archiveFileName = "${rootProject.name}-${version}.jar"
 }
 
 description = 'Vempain Website public backend (Spring Boot rewrite of the PHP backend)'
 
-java {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
+group = 'fi.poltsi.vempain'
+version = libs.versions.release.get()
+
+// Fixed name without the version: the Dockerfile copies this exact file into the image
+bootJar {
+    archiveFileName = "${rootProject.name}.jar"
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.spring.io/milestone' }
+}
+
+// Report deprecated API use and unchecked operations with their location instead of javac's "recompile with -Xlint" note
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
+
+// Versions without a catalog entry come from the Spring Boot BOM that the Boot plugin imports through the dependency-management plugin
 dependencies {
     implementation project(':api')
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -34,9 +47,7 @@ dependencies {
     implementation "com.maxmind.geoip2:geoip2:${libs.versions.geoip2.get()}"
     implementation 'org.springframework.security:spring-security-crypto'
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${libs.versions.springdoc.get()}"
-
     runtimeOnly 'org.postgresql:postgresql'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.micrometer:micrometer-tracing-test'
     // TraceContinuationCTC wires the OpenTelemetry bridge the way Boot does; the starter has it at runtime only
@@ -46,23 +57,19 @@ dependencies {
 	testImplementation "org.testcontainers:testcontainers-postgresql:${libs.versions.testcontainers.get()}"
 }
 
-repositories {
-	mavenCentral()
-	maven {
-		url = "https://maven.pkg.github.com/Vempain/vempain-auth"
-		credentials {
-			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-			password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
-		}
-	}
-	maven {
-		url = "https://maven.pkg.github.com/Vempain/vempain-admin-backend-api"
-		credentials {
-			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-			password = project.findProperty("gpr.token") ?: System.getenv("GITHUB_TOKEN")
-		}
-	}
-	maven { url = 'https://repo.spring.io/milestone' }
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    include '**/*UTC.class'
+    include '**/*ITC.class'
+    include '**/*CTC.class'
+}
+
+test {
+    finalizedBy jacocoTestReport
 }
 
 jacocoTestReport {
@@ -86,15 +93,4 @@ jacocoTestCoverageVerification {
 			}
 		}
 	}
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-    include '**/*UTC.class'
-    include '**/*ITC.class'
-    include '**/*CTC.class'
-}
-
-tasks.named('bootJar') {
-    archiveFileName = 'vempain-website-backend.jar'
 }

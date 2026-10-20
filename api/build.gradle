@@ -1,21 +1,30 @@
 plugins {
     id 'java-library'
+    alias(libs.plugins.freefair.lombok)
+    alias(libs.plugins.spring.dependency.management)
 	id 'maven-publish'
 	id 'jacoco'
-	alias(libs.plugins.freefair.lombok)
 }
 
 description = 'Vempain Website REST API contracts and DTOs'
 
+def apiArtifactName = "${rootProject.name}-api"
+
+repositories {
+    mavenCentral()
+}
+
 group = 'fi.poltsi.vempain'
 version = libs.versions.release.get()
-def apiArtifactName = "${rootProject.name}-api"
 
 jar {
 	archiveFileName = "${apiArtifactName}-${version}.jar"
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    }
 	// Attach sources and javadoc for Maven consumers
 	withSourcesJar()
 	withJavadocJar()
@@ -29,6 +38,23 @@ tasks.named('javadocJar') {
 	archiveFileName = "${apiArtifactName}-${version}-javadoc.jar"
 }
 
+// Quiet javadoc warnings as we're using Lombok which does not generate documentation for the generated methods
+tasks.withType(Javadoc).configureEach {
+    options.addStringOption('Xdoclint:all,-missing', '-quiet') // keep other checks, ignore missing docs
+}
+
+// The Spring, Jakarta and Jackson artifacts below take their versions from the Spring Boot BOM
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
+    }
+}
+
+// Report deprecated API use and unchecked operations with their location instead of javac's "recompile with -Xlint" note
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
+
 dependencies {
     api 'org.springframework:spring-web'
     api 'jakarta.servlet:jakarta.servlet-api'
@@ -38,8 +64,8 @@ dependencies {
 	api 'jakarta.validation:jakarta.validation-api'
     api 'com.fasterxml.jackson.core:jackson-annotations'
     api "io.swagger.core.v3:swagger-annotations:${libs.versions.swagger.get()}"
-
 	testImplementation 'org.junit.jupiter:junit-jupiter'
+    // Gradle 9 no longer injects the JUnit Platform launcher; it must be on the test runtime classpath explicitly
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -48,7 +74,6 @@ publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			from components.java
-			// Optional: keep artifactId as project name ('api')
 			groupId = project.group
 			artifactId = apiArtifactName
 			version = project.version
@@ -80,15 +105,23 @@ publishing {
 	}
 }
 
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    include '**/*JTC.class'
+}
+
+test {
+    finalizedBy jacocoTestReport
+}
+
 jacocoTestReport {
 	dependsOn test
 	reports {
 		xml.required = true
 		html.required = true
 	}
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-	include '**/*JTC.class'
 }

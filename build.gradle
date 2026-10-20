@@ -1,29 +1,4 @@
-plugins {
-    alias(libs.plugins.spring.boot) apply false
-    alias(libs.plugins.spring.dependency.management) apply false
-}
+// Root build file of the multi-project build; the subprojects keep their own build files.
 
 // Team code convention: Spotless with the shared Eclipse profile, Checkstyle, build constraints, git hooks.
 apply from: 'gradle/team-convention.gradle'
-
-allprojects {
-    group = 'fi.poltsi.vempain'
-    version = libs.versions.release.get()
-}
-
-subprojects {
-    apply plugin: 'io.spring.dependency-management'
-
-    dependencyManagement {
-        imports {
-            mavenBom "org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"
-        }
-    }
-
-    plugins.withId('java') {
-        java {
-            sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-            targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-        }
-    }
-}

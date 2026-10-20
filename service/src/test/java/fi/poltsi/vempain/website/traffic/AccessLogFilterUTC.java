@@ -30,6 +30,7 @@ import fi.poltsi.vempain.website.metrics.WebsiteMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.tracing.handler.TracingObservationHandler;
 import io.micrometer.tracing.test.simple.SimpleTracer;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,7 +85,8 @@ class AccessLogFilterUTC {
     private Map<String, Object> onlyLine() {
         assertEquals(1, lines.list.size(), "exactly one access line");
         return objectMapper.readValue(lines.list.getFirst()
-            .getFormattedMessage(), Map.class);
+            .getFormattedMessage(), new TypeReference<Map<String, Object>>() {
+            });
     }
 
     @Test
