@@ -37,6 +37,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -120,7 +121,8 @@ class TraceContinuationCTC {
     private Map<String, Object> onlyLine() {
         assertEquals(1, lines.list.size());
         return objectMapper.readValue(lines.list.getFirst()
-            .getFormattedMessage(), Map.class);
+            .getFormattedMessage(), new TypeReference<Map<String, Object>>() {
+            });
     }
 
     @Test

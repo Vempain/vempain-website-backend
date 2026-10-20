@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -70,7 +71,8 @@ class DtoRoundTripJTC {
             Object read = mapper.readValue(json, dto);
             assertEquals(filled, read, dto.getSimpleName() + " changed during the round trip");
 
-            Map<String, Object> withUnknown = new LinkedHashMap<>(mapper.readValue(json, Map.class));
+            Map<String, Object> withUnknown = new LinkedHashMap<>(mapper.readValue(json, new TypeReference<Map<String, Object>>() {
+            }));
             withUnknown.put("added_by_a_newer_frontend", "ignored");
             assertEquals(filled, mapper.readValue(mapper.writeValueAsString(withUnknown), dto), dto.getSimpleName() + " rejects unknown keys");
         }
