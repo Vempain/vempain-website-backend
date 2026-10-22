@@ -34,6 +34,14 @@ treated as a supported implementation.
 - Entities are mapped to DTOs in `service/ResponseMapperService` (pages, files, galleries,
   locations, embeds) with bulk subject/location lookups; GPS locations are only resolved for
   authenticated callers. Published data sets are mapped in `PublishedDataService`.
+- Every published resource carries the audit trail the admin backend writes into the site schema: `creator`, `created`,
+  `modifier`, `modified`, the admin users named by nick like `web_site_page` (never by admin user ID). The columns were added to
+  `web_site_file`, `web_gps_location`, `web_site_subject` and `web_site_configuration` by the admin backend's site migration
+  `V1004__site_audit_columns.sql`, and `V1005__gallery_audit_nicks.sql` turned the gallery's creator/modifier from admin user IDs into
+  nicks; they are nullable, because rows published before those releases carry NULL until they are published again. The entities map
+  them read-only and `WebSiteFileResponse`, `WebSiteGalleryResponse`, `LocationResponse` and `SubjectResponse` expose them (`ResponseContractJTC`,
+  `vempain-website-frontend/src/models/WebSiteFile|WebSiteGallery|WebSiteLocation|WebSiteSubject.ts`); the public
+  configuration stays a key/value map. Tests: `WebSiteEntitiesUTC`, `ResponseMapperServiceUTC`, `SubjectLookupServiceUTC`.
 
 ## Open Graph
 

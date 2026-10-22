@@ -110,6 +110,10 @@ public class ResponseMapperService {
                 .pages(file.getPages())
                 .metadata(file.getMetadata())
                 .subjects(tags.getOrDefault(file.getId(), List.of()))
+                .creator(file.getCreator())
+                .created(file.getCreated())
+                .modifier(file.getModifier())
+                .modified(file.getModified())
                 .build())
             .toList();
     }
@@ -128,6 +132,10 @@ public class ResponseMapperService {
                 .description(gallery.getDescription())
                 .aclId(gallery.getAclId())
                 .subjects(tags.getOrDefault(gallery.getId(), List.of()))
+                .creator(gallery.getCreator())
+                .created(gallery.getCreated())
+                .modifier(gallery.getModifier())
+                .modified(gallery.getModified())
                 .build())
             .toList();
     }
@@ -147,6 +155,10 @@ public class ResponseMapperService {
             .city(location.getCity())
             .street(location.getStreet())
             .subLocation(location.getSubLocation())
+            .creator(location.getCreator())
+            .created(location.getCreated())
+            .modifier(location.getModifier())
+            .modified(location.getModified())
             .build();
     }
 

@@ -121,6 +121,10 @@ public class SubjectLookupService {
             .subjectEs(subject.getSubjectEs())
             .subjectFi(subject.getSubjectFi())
             .subjectSe(subject.getSubjectSe())
+            .creator(subject.getCreator())
+            .created(subject.getCreated())
+            .modifier(subject.getModifier())
+            .modified(subject.getModified())
             .build();
     }
 }

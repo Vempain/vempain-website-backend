@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.api.response;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,4 +34,14 @@ public class WebSiteGalleryResponse {
     private Long aclId;
     @Schema(description = "Subjects attached to the gallery")
     private List<SubjectResponse> subjects;
+
+    @Schema(description = "Nick of the admin user who created the gallery, null for rows published before the audit trail named users by nick",
+            example = "alice")
+    private String creator;
+    @Schema(description = "When the gallery was created", example = "2026-01-05T08:00:00")
+    private LocalDateTime created;
+    @Schema(description = "Nick of the admin user who last changed the gallery, null when never changed", example = "bob")
+    private String modifier;
+    @Schema(description = "When the gallery was last changed", example = "2026-01-06T08:00:00")
+    private LocalDateTime modified;
 }

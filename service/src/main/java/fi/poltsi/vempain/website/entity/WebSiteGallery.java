@@ -33,14 +33,17 @@ public class WebSiteGallery {
     @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "creator", nullable = false)
-    private Long creator;
+    /**
+     * Nick of the admin user who created the gallery; null for rows published before the site named users by nick.
+     */
+    @Column(name = "creator", length = 512)
+    private String creator;
 
     @Column(name = "created", nullable = false)
     private LocalDateTime created;
 
-    @Column(name = "modifier")
-    private Long modifier;
+    @Column(name = "modifier", length = 512)
+    private String modifier;
 
     @Column(name = "modified")
     private LocalDateTime modified;
@@ -65,7 +68,7 @@ public class WebSiteGallery {
         return description;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
@@ -73,7 +76,7 @@ public class WebSiteGallery {
         return created;
     }
 
-    public Long getModifier() {
+    public String getModifier() {
         return modifier;
     }
 

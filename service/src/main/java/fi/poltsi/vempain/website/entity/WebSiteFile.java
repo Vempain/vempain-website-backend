@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.entity;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 import jakarta.persistence.Column;
@@ -80,6 +81,24 @@ public class WebSiteFile {
 
     @Column(name = "thumbnail_path")
     private String thumbnailPath;
+
+    /**
+     * Nick of the admin user who created the row on the site side; null for rows published before the audit columns existed.
+     */
+    @Column(name = "creator", length = 512)
+    private String creator;
+
+    @Column(name = "created")
+    private LocalDateTime created;
+
+    /**
+     * Nick of the admin user who last changed the row on the site side.
+     */
+    @Column(name = "modifier", length = 512)
+    private String modifier;
+
+    @Column(name = "modified")
+    private LocalDateTime modified;
 
     public Long getId() {
         return id;
@@ -163,5 +182,21 @@ public class WebSiteFile {
 
     public String getThumbnailPath() {
         return thumbnailPath;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public String getModifier() {
+        return modifier;
+    }
+
+    public LocalDateTime getModified() {
+        return modified;
     }
 }
