@@ -91,7 +91,7 @@ class ResponseContractJTC {
             .build());
         assertEquals(Set.of("id", "file_id", "acl_id", "comment", "file_path", "thumbnail_path", "mimetype", "original_date_time", "rights_holder",
                 "rights_terms", "rights_url", "creator_name", "creator_email", "creator_country", "creator_url", "location", "location_id", "width", "height",
-                "length", "pages", "metadata", "subjects"), keys(json));
+                "length", "pages", "metadata", "subjects", "creator", "created", "modifier", "modified"), keys(json));
         assertTrue(json.contains("\"original_date_time\":\"2024-05-13T16:03:44Z\""));
     }
 
@@ -99,17 +99,20 @@ class ResponseContractJTC {
     void locationMatchesTheWebSiteLocationModel() {
         assertEquals(
                 Set.of("id", "latitude", "latitude_ref", "longitude", "longitude_ref", "altitude", "direction", "satellite_count", "country", "state", "city",
-                        "street", "sub_location"),
+                        "street", "sub_location", "creator", "created", "modifier", "modified"),
                 keys(LocationResponse.builder()
                     .build()));
     }
 
     @Test
     void galleryAndSubjectMatchTheirModels() {
-        assertEquals(Set.of("id", "gallery_id", "shortname", "description", "acl_id", "subjects"), keys(WebSiteGalleryResponse.builder()
-            .build()));
-        assertEquals(Set.of("id", "subject", "subject_de", "subject_en", "subject_es", "subject_fi", "subject_se"), keys(SubjectResponse.builder()
-            .build()));
+        assertEquals(Set.of("id", "gallery_id", "shortname", "description", "acl_id", "subjects", "creator", "created", "modifier", "modified"),
+                keys(WebSiteGalleryResponse.builder()
+                    .build()));
+        assertEquals(
+                Set.of("id", "subject", "subject_de", "subject_en", "subject_es", "subject_fi", "subject_se", "creator", "created", "modifier", "modified"),
+                keys(SubjectResponse.builder()
+                    .build()));
         assertEquals(Set.of("pages", "galleries", "files"), keys(SubjectSearchResponse.builder()
             .build()));
     }

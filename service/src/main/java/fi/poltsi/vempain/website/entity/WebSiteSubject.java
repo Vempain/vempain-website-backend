@@ -1,5 +1,7 @@
 package fi.poltsi.vempain.website.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,6 +39,24 @@ public class WebSiteSubject {
     @Column(name = "subject_se")
     private String subjectSe;
 
+    /**
+     * Nick of the admin user who created the row on the site side; null for rows published before the audit columns existed.
+     */
+    @Column(name = "creator", length = 512)
+    private String creator;
+
+    @Column(name = "created")
+    private LocalDateTime created;
+
+    /**
+     * Nick of the admin user who last changed the row on the site side.
+     */
+    @Column(name = "modifier", length = 512)
+    private String modifier;
+
+    @Column(name = "modified")
+    private LocalDateTime modified;
+
     public Long getId() {
         return id;
     }
@@ -63,5 +83,21 @@ public class WebSiteSubject {
 
     public String getSubjectSe() {
         return subjectSe;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public String getModifier() {
+        return modifier;
+    }
+
+    public LocalDateTime getModified() {
+        return modified;
     }
 }

@@ -137,6 +137,10 @@ class ResponseMapperServiceUTC {
         when(file.getRightsHolder()).thenReturn("Alice");
         when(file.getCreatorName()).thenReturn("Alice Example");
         when(file.getLocationId()).thenReturn(42L);
+        when(file.getCreator()).thenReturn("alice");
+        when(file.getCreated()).thenReturn(LocalDateTime.of(2026, 1, 5, 8, 0));
+        when(file.getModifier()).thenReturn("bob");
+        when(file.getModified()).thenReturn(LocalDateTime.of(2026, 1, 6, 8, 0));
         when(subjects.forFiles(List.of(9L))).thenReturn(Map.of());
 
         when(currentUser.current()).thenReturn(Optional.empty());
@@ -149,6 +153,11 @@ class ResponseMapperServiceUTC {
         assertEquals("Alice Example", anonymous.getCreatorName());
         assertEquals(42L, anonymous.getLocationId());
         assertNull(anonymous.getLocation());
+        // The audit trail of the published file (admin users by nick)
+        assertEquals("alice", anonymous.getCreator());
+        assertEquals(LocalDateTime.of(2026, 1, 5, 8, 0), anonymous.getCreated());
+        assertEquals("bob", anonymous.getModifier());
+        assertEquals(LocalDateTime.of(2026, 1, 6, 8, 0), anonymous.getModified());
         verifyNoInteractions(locations);
 
         WebGpsLocation location = mock(WebGpsLocation.class);
@@ -156,6 +165,8 @@ class ResponseMapperServiceUTC {
         when(location.getLatitude()).thenReturn(new BigDecimal("60.16952"));
         when(location.getLatitudeRef()).thenReturn("N");
         when(location.getCity()).thenReturn("Helsinki");
+        when(location.getCreator()).thenReturn("bob");
+        when(location.getCreated()).thenReturn(LocalDateTime.of(2026, 1, 6, 8, 0));
         when(locations.findByIdIn(Set.of(42L))).thenReturn(List.of(location));
         when(currentUser.current()).thenReturn(Optional.of(new AuthenticatedUser(1, "alice", false, "t")));
 
@@ -167,6 +178,12 @@ class ResponseMapperServiceUTC {
             .getLatitude());
         assertEquals("Helsinki", authenticated.getLocation()
             .getCity());
+        assertEquals("bob", authenticated.getLocation()
+            .getCreator());
+        assertEquals(LocalDateTime.of(2026, 1, 6, 8, 0), authenticated.getLocation()
+            .getCreated());
+        assertNull(authenticated.getLocation()
+            .getModifier());
     }
 
     @Test
@@ -190,6 +207,8 @@ class ResponseMapperServiceUTC {
         when(gallery.getGalleryId()).thenReturn(1050L);
         when(gallery.getShortname()).thenReturn("Summer");
         when(gallery.getAclId()).thenReturn(7L);
+        when(gallery.getCreator()).thenReturn("alice");
+        when(gallery.getCreated()).thenReturn(LocalDateTime.of(2026, 1, 5, 8, 0));
         SubjectResponse tag = SubjectResponse.builder()
             .id(1L)
             .subject("summer")
@@ -202,5 +221,8 @@ class ResponseMapperServiceUTC {
         assertEquals("Summer", response.getShortname());
         assertEquals(7L, response.getAclId());
         assertEquals(List.of(tag), response.getSubjects());
+        assertEquals("alice", response.getCreator());
+        assertEquals(LocalDateTime.of(2026, 1, 5, 8, 0), response.getCreated());
+        assertNull(response.getModifier());
     }
 }

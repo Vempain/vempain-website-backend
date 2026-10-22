@@ -57,7 +57,8 @@ class WebSiteEntitiesUTC {
         WebSiteFile file = populate(new WebSiteFile(), "id", 1L, "fileId", 72758L, "aclId", 7L, "comment", "Comment", "filePath", "images/photo.jpg",
                 "mimetype", "image/jpeg", "originalDateTime", TAKEN, "rightsHolder", "Holder", "rightsTerms", "Terms", "rightsUrl", "https://rights.example",
                 "creatorName", "Alice", "creatorEmail", "alice@example.com", "creatorCountry", "FI", "creatorUrl", "https://alice.example", "locationId", 9L,
-                "width", 4000L, "height", 3000L, "length", 12L, "pages", 3L, "metadata", "{\"iso\":100}", "thumbnailPath", "images/.thumb/photo.jpg");
+                "width", 4000L, "height", 3000L, "length", 12L, "pages", 3L, "metadata", "{\"iso\":100}", "thumbnailPath", "images/.thumb/photo.jpg", "creator",
+                "alice", "created", CREATED, "modifier", "bob", "modified", MODIFIED);
 
         assertEquals(1L, file.getId());
         assertEquals(72758L, file.getFileId());
@@ -80,13 +81,18 @@ class WebSiteEntitiesUTC {
         assertEquals(3L, file.getPages());
         assertEquals("{\"iso\":100}", file.getMetadata());
         assertEquals("images/.thumb/photo.jpg", file.getThumbnailPath());
+        assertEquals("alice", file.getCreator());
+        assertEquals(CREATED, file.getCreated());
+        assertEquals("bob", file.getModifier());
+        assertEquals(MODIFIED, file.getModified());
     }
 
     @Test
     void gpsLocationExposesEveryPublishedColumn() {
         WebGpsLocation location = populate(new WebGpsLocation(), "id", 9L, "latitude", new BigDecimal("60.16952"), "latitudeRef", "N", "longitude",
                 new BigDecimal("24.93545"), "longitudeRef", "E", "altitude", 12.5, "direction", 180.0, "satelliteCount", 8, "country", "Finland", "state",
-                "Uusimaa", "city", "Helsinki", "street", "Mannerheimintie", "subLocation", "Centre");
+                "Uusimaa", "city", "Helsinki", "street", "Mannerheimintie", "subLocation", "Centre", "creator", "alice", "created", CREATED, "modifier", "bob",
+                "modified", MODIFIED);
 
         assertEquals(9L, location.getId());
         assertEquals(new BigDecimal("60.16952"), location.getLatitude());
@@ -101,6 +107,10 @@ class WebSiteEntitiesUTC {
         assertEquals("Helsinki", location.getCity());
         assertEquals("Mannerheimintie", location.getStreet());
         assertEquals("Centre", location.getSubLocation());
+        assertEquals("alice", location.getCreator());
+        assertEquals(CREATED, location.getCreated());
+        assertEquals("bob", location.getModifier());
+        assertEquals(MODIFIED, location.getModified());
     }
 
     @Test
@@ -123,23 +133,24 @@ class WebSiteEntitiesUTC {
     @Test
     void galleryExposesEveryPublishedColumn() {
         WebSiteGallery gallery = populate(new WebSiteGallery(), "id", 4L, "galleryId", 1050L, "aclId", 6L, "shortname", "summer", "description", "Summer trip",
-                "creator", 1L, "created", CREATED, "modifier", 2L, "modified", MODIFIED);
+                "creator", "alice", "created", CREATED, "modifier", "bob", "modified", MODIFIED);
 
         assertEquals(4L, gallery.getId());
         assertEquals(1050L, gallery.getGalleryId());
         assertEquals(6L, gallery.getAclId());
         assertEquals("summer", gallery.getShortname());
         assertEquals("Summer trip", gallery.getDescription());
-        assertEquals(1L, gallery.getCreator());
+        assertEquals("alice", gallery.getCreator());
         assertEquals(CREATED, gallery.getCreated());
-        assertEquals(2L, gallery.getModifier());
+        assertEquals("bob", gallery.getModifier());
         assertEquals(MODIFIED, gallery.getModified());
     }
 
     @Test
     void subjectExposesEveryLocalisedColumn() {
         WebSiteSubject subject = populate(new WebSiteSubject(), "id", 5L, "subject", "sunset", "subjectDe", "Sonnenuntergang", "subjectEn", "sunset",
-                "subjectEs", "puesta de sol", "subjectFi", "auringonlasku", "subjectSe", "solnedgång");
+                "subjectEs", "puesta de sol", "subjectFi", "auringonlasku", "subjectSe", "solnedgång", "creator", "alice", "created", CREATED, "modifier",
+                "bob", "modified", MODIFIED);
 
         assertEquals(5L, subject.getId());
         assertEquals("sunset", subject.getSubject());
@@ -148,18 +159,26 @@ class WebSiteEntitiesUTC {
         assertEquals("puesta de sol", subject.getSubjectEs());
         assertEquals("auringonlasku", subject.getSubjectFi());
         assertEquals("solnedgång", subject.getSubjectSe());
+        assertEquals("alice", subject.getCreator());
+        assertEquals(CREATED, subject.getCreated());
+        assertEquals("bob", subject.getModifier());
+        assertEquals(MODIFIED, subject.getModified());
     }
 
     @Test
     void configurationExposesEveryColumn() {
         WebSiteConfiguration configuration = populate(new WebSiteConfiguration(), "id", 6L, "configKey", "site.name", "configType", "string", "configDefault",
-                "Vempain", "configValue", "My site");
+                "Vempain", "configValue", "My site", "creator", "alice", "created", CREATED, "modifier", "bob", "modified", MODIFIED);
 
         assertEquals(6L, configuration.getId());
         assertEquals("site.name", configuration.getConfigKey());
         assertEquals("string", configuration.getConfigType());
         assertEquals("Vempain", configuration.getConfigDefault());
         assertEquals("My site", configuration.getConfigValue());
+        assertEquals("alice", configuration.getCreator());
+        assertEquals(CREATED, configuration.getCreated());
+        assertEquals("bob", configuration.getModifier());
+        assertEquals(MODIFIED, configuration.getModified());
     }
 
     @Test

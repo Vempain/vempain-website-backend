@@ -1,5 +1,6 @@
 package fi.poltsi.vempain.website.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -67,15 +68,24 @@ class SubjectLookupServiceUTC {
         WebSiteSubject unnamed = mock(WebSiteSubject.class);
         when(sunset.getId()).thenReturn(1L);
         when(sunset.getSubject()).thenReturn("sunset");
+        when(sunset.getCreator()).thenReturn("alice");
+        when(sunset.getCreated()).thenReturn(LocalDateTime.of(2026, 1, 5, 8, 0));
+        when(sunset.getModifier()).thenReturn("bob");
+        when(sunset.getModified()).thenReturn(LocalDateTime.of(2026, 1, 6, 8, 0));
         when(unnamed.getId()).thenReturn(2L);
         when(unnamed.getSubject()).thenReturn(null);
         when(repository.findFileSubjectLinks(anyCollection())).thenReturn(List.of(fileLink));
         when(repository.findGallerySubjectLinks(anyCollection())).thenReturn(List.of(galleryLink));
         when(repository.findByIdIn(anyCollection())).thenReturn(List.of(sunset, unnamed));
 
-        assertEquals("sunset", service.forFile(3L)
-            .get(0)
-            .getSubject());
+        var fileSubject = service.forFile(3L)
+            .get(0);
+        assertEquals("sunset", fileSubject.getSubject());
+        // The audit trail of the published subject (admin users by nick)
+        assertEquals("alice", fileSubject.getCreator());
+        assertEquals(LocalDateTime.of(2026, 1, 5, 8, 0), fileSubject.getCreated());
+        assertEquals("bob", fileSubject.getModifier());
+        assertEquals(LocalDateTime.of(2026, 1, 6, 8, 0), fileSubject.getModified());
         assertEquals(List.of(3L), List.copyOf(service.forFiles(List.of(3L))
             .keySet()));
         assertNull(service.forGallery(4L)
