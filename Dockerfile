@@ -1,32 +1,19 @@
-FROM gradle:9.1.0-jdk25 AS build
-
-WORKDIR /build
-
-COPY gradlew settings.gradle build.gradle ./
-COPY gradle/libs.versions.toml gradle/libs.versions.toml
-COPY gradle/team-convention.gradle gradle/team-convention.gradle
-COPY gradle/wrapper ./gradle/wrapper
-COPY .config .config
-COPY api/build.gradle api/build.gradle
-COPY service/build.gradle service/build.gradle
-RUN ./gradlew dependencies --no-daemon
-
-COPY api ./api
-COPY service ./service
-RUN ./gradlew :service:bootJar --no-daemon -x test
-
+# Runtime-only image: the jar is built beforehand (CI: `./gradlew clean bootJar` in the shared
+# spring-boot-service workflow, locally: `./gradlew bootJar`) and copied in, exactly as in the
+# admin and file backends. Nothing is compiled inside the image build.
 FROM eclipse-temurin:25-jre-alpine
+EXPOSE 8000
 
-RUN apk add --no-cache curl
-RUN addgroup -S vempain && adduser -S -G vempain vempain
+RUN apk add --no-cache curl su-exec
+RUN mkdir -p /var/www/backend
+# The ids are placeholders: container-entrypoint.sh gives the account VEMPAIN_UID:VEMPAIN_GID when the container starts
+RUN adduser -D -h /var/www/backend -u 6666 -H vempain
 
 WORKDIR /var/www/backend
 
-COPY --from=build /build/service/build/libs/vempain-website-backend.jar ./vempain-website-backend.jar
-RUN chown -R vempain:vempain /var/www/backend
+COPY service/build/libs/vempain-website-backend.jar ./vempain-website-backend.jar
+COPY container-entrypoint.sh /usr/local/bin/container-entrypoint.sh
+RUN chmod 755 /usr/local/bin/container-entrypoint.sh
 
-USER vempain
-
-EXPOSE 8000
-
-ENTRYPOINT ["java", "-jar", "/var/www/backend/vempain-website-backend.jar"]
+ENTRYPOINT ["/usr/local/bin/container-entrypoint.sh"]
+CMD ["-jar", "/var/www/backend/vempain-website-backend.jar"]

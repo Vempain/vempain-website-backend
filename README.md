@@ -175,14 +175,21 @@ Both endpoints are disabled when the `prod` Spring Boot profile is active.
 
 Container image:
 
+The `Dockerfile` is runtime-only, like the admin and file backend images: it copies the
+pre-built `service/build/libs/vempain-website-backend.jar` onto `eclipse-temurin:25-jre-alpine`
+and compiles nothing itself. CI builds the jar with `./gradlew clean bootJar` in the shared
+`spring-boot-service` workflow before running `docker build`; locally do the same:
+
 ```bash
-docker build -t vempain-site-backend-spring backend-spring
+./gradlew bootJar
+docker build -t vempain-website-backend .
 ```
 
 The image listens on port 8000 and requires the database, JWT, and file-root environment
-variables at runtime. Build it from this repository's root with `docker build -t
-vempain-site-backend .`; deployment wiring belongs to the current compose/Swarm
-configuration, not to a legacy PHP bind mount.
+variables at runtime. It starts as root and runs the service as `VEMPAIN_UID:VEMPAIN_GID` (default `6666:6666`), so set those to the host
+user that owns the mounted files and log directory; a container started with a fixed non-root `--user` keeps that user. Deployment wiring belongs to the current
+compose/Swarm configuration
+in `vempain-cluster`, which pulls the published `ghcr.io` image.
 
 ## Layout
 
