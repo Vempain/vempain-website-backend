@@ -136,6 +136,14 @@ Run `./gradlew clean test` for backend changes. Use the focused service or API
 test task first when iterating. Review `README.md`, `application*.yaml`,
 Dockerfiles, and CI configuration when changing deployment behavior.
 
+## Container image
+
+- `Dockerfile` is runtime-only (the CI-built `service/build/libs/vempain-website-backend.jar` is copied in) and starts
+  `container-entrypoint.sh` as root, which gives the image's `vempain` account the ids `VEMPAIN_UID`/`VEMPAIN_GID` (default `6666`,
+  `ENV_VEMPAIN_UID`/`ENV_VEMPAIN_GID` in `vempain-cluster/website/.env`) and runs Java through `su-exec` as those ids; a container started
+  as a non-root user keeps that user. The ids must be able to read the published files mounted at `/files` and to write the log directory
+  `/var/log/vempain`. The user handling is identical to the admin and file backend entrypoints (which additionally build a truststore).
+
 ## Tag ACL rule
 
 Tags are metadata, not ACL-bearing resources. Tag entities have no ACL information, so tag list, search, and mutation endpoints must not perform ACL checks on tags. ACL checks apply only to resources that explicitly carry an ACL.
