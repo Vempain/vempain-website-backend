@@ -33,9 +33,9 @@ management:
   tracing:
     # Off unless VEMPAIN_TRACING_ENABLED=true; the Tempo endpoint, sampling, credentials and certificate come from vempain.tracing.* /
     # vempain.metrics.* through MetricsExportEnvironmentPostProcessor. Incoming traceparent headers are continued (W3C, B3 consumed).
-    enabled: ${vempain.tracing.enabled}
     export:
-      # Also drives Boot's log correlation: with tracing off the console pattern stays without the [app,traceId,spanId] block
+      # The only tracing switch since Boot 4.0 (management.tracing.enabled is deprecated): propagation, exporter and Boot's log correlation,
+      # so with tracing off the console pattern stays without the [app,traceId,spanId] block
       enabled: ${vempain.tracing.enabled}
 
 spring:
