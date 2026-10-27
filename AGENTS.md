@@ -77,11 +77,12 @@ treated as a supported implementation.
   copy of the class the admin and file backends get from `vempain-common`, for the same reason the auth code is local.
 - The management port serves only `health`; do not add `prometheus` or other endpoints to the exposure list.
 - Tracing (`spring-boot-starter-opentelemetry`): `vempain.tracing.enabled|url|sampling` (`VEMPAIN_TRACING_*`) are mapped by the same
-  post-processor to `management.tracing.enabled`, `management.tracing.sampling.probability` and
+  post-processor to `management.tracing.export.enabled`, `management.tracing.sampling.probability` and
   `management.opentelemetry.tracing.export.otlp.endpoint|headers.Authorization|ssl.bundle`, reusing the metrics credentials and
-  certificate (Tempo sits behind the same basic auth). `application.yaml` keeps `management.tracing.enabled: ${vempain.tracing.enabled}`
-  so that nothing is traced or exported by default. Incoming `traceparent` is continued (W3C and B3 consumed, W3C produced); Boot puts
-  `traceId`/`spanId` into the MDC and the console pattern. `TraceContinuationCTC` wires the real OpenTelemetry bridge through the
+  certificate (Tempo sits behind the same basic auth). `application.yaml` keeps `management.tracing.export.enabled: ${vempain.tracing.enabled}`
+  so that nothing is traced or exported by default (`management.tracing.enabled` is deprecated since Boot 4.0 and no longer set).
+  Incoming `traceparent` is continued (W3C and B3 consumed, W3C produced); Boot puts `traceId`/`spanId` into the MDC and the console
+  pattern. `TraceContinuationCTC` wires the real OpenTelemetry bridge through the
   observation filter and proves the continuation, the MDC and the access line.
 - Event meters live in `metrics/WebsiteMetrics` (counters, timer, summary; fixed tag values, the page path is bounded to existing pages
   with `unknown` as the fallback) and the database backed gauges in `metrics/WebsiteGauges` (cached for a minute, never a query per
@@ -135,6 +136,14 @@ treated as a supported implementation.
 Run `./gradlew clean test` for backend changes. Use the focused service or API
 test task first when iterating. Review `README.md`, `application*.yaml`,
 Dockerfiles, and CI configuration when changing deployment behavior.
+
+javac runs with `-Xlint:deprecation -Xlint:unchecked -Werror` in every module (`tasks.withType(JavaCompile)` in the `build.gradle` files), so a deprecated
+3rd-party API or an unchecked operation fails the compile: replace the call with the documented successor; a deliberate exception needs `@SuppressWarnings` with
+a comment explaining why.
+`ConfigurationPropertyDeprecationUTC` scans `application*.yaml|yml|properties` under `src/main/resources` and `src/test/resources` against the deprecations of
+the Spring Boot configuration metadata on the class path and fails on any deprecated key, naming the replacement; Boot itself only logs them at startup. The
+scanner, `fi.poltsi.vempain.website.config.DeprecatedConfigurationProperties`, is a copy of the `vempain-common` class (this backend does not depend on that
+library, like the metrics post-processor); keep the two in sync.
 
 ## Container image
 
