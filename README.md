@@ -69,7 +69,7 @@ Every setting is bound to the environment variables used by the current Vempain 
 | `VEMPAIN_TRACING_SAMPLING`              | `vempain.tracing.sampling`                          | `1.0` (0..1 of traces kept)         |
 | `VEMPAIN_SITE_PROXY_MODE`               | `vempain.site.proxy.mode`                           | `none` (`cloudflare`, `forwarded`)  |
 | `VEMPAIN_SITE_PROXY_TRUSTED_HEADER`     | `vempain.site.proxy.trusted-header`                 | - (the mode's default header)       |
-| `VEMPAIN_SITE_GEOIP_DATABASE`           | `vempain.site.geoip.database`                       | - (GeoLite2-Country `.mmdb`)        |
+| `VEMPAIN_SITE_GEOIP_DATABASE`           | `vempain.site.geoip.database`                       | - (GeoLite2-City `.mmdb`)           |
 | `VEMPAIN_SITE_ACCESS_LOG_ENABLED`       | `vempain.site.access-log.enabled`                   | `true`                              |
 | `VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY` | `server.forward-headers-strategy`                   | `none` (`framework` behind a proxy) |
 
@@ -118,7 +118,7 @@ The real client address depends on what runs in front of the service. `VEMPAIN_S
 address and ignores every proxy header, because a client can send them itself. `cloudflare` reads `CF-Connecting-IP` and the country from
 `CF-IPCountry`; `forwarded` reads the first address of `X-Forwarded-For`, then `X-Real-IP`. `VEMPAIN_SITE_PROXY_TRUSTED_HEADER` overrides
 the header of the mode. Behind a proxy also set `VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY=framework` so that generated URLs use the
-forwarded scheme and host. Without Cloudflare the country comes from an optional MaxMind GeoLite2-Country database (`VEMPAIN_SITE_GEOIP_DATABASE`, mounted
+forwarded scheme and host. Without Cloudflare the location comes from an optional MaxMind GeoLite2-City database (`VEMPAIN_SITE_GEOIP_DATABASE`, mounted
 read-only; the database is not shipped, it needs a MaxMind account and licence) and is `unknown`
 otherwise. Private and loopback addresses are never looked up. `VEMPAIN_SITE_ACCESS_LOG_ENABLED=false` switches the whole filter off.
 

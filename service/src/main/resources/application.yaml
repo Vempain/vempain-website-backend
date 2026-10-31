@@ -72,7 +72,7 @@ vempain:
     proxy:
       mode: ${VEMPAIN_SITE_PROXY_MODE:none}
       trusted-header: ${VEMPAIN_SITE_PROXY_TRUSTED_HEADER:}
-    # Optional MaxMind GeoLite2-Country database for the country of the access log; Cloudflare's CF-IPCountry wins when present
+    # Optional MaxMind GeoLite2-City database for the location of the access log; Cloudflare's CF-IPCountry wins for the country when present
     geoip:
       database: ${VEMPAIN_SITE_GEOIP_DATABASE:}
     # One JSON line per request on stdout through the logger vempain.site.access (shipped to Loki by the host's log collector)

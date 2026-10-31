@@ -48,7 +48,7 @@ public class SiteProperties {
     private Proxy proxy = new Proxy();
 
     /**
-     * Optional MaxMind GeoLite2 country lookup of the access log.
+     * Optional MaxMind GeoLite2 City lookup of the access log.
      */
     private Geoip geoip = new Geoip();
 
@@ -166,7 +166,7 @@ public class SiteProperties {
     public static class Geoip {
 
         /**
-         * Path of a MaxMind GeoLite2-Country {@code .mmdb}; empty disables the lookup.
+         * Path of a MaxMind GeoLite2-City {@code .mmdb}; empty disables the lookup.
          */
         private String database = "";
 

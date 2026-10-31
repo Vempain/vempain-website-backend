@@ -51,7 +51,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-otlp'
     // Distributed tracing: W3C traceparent propagation, trace/span ids in every log line, spans pushed over OTLP/HTTP to Tempo
     implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
-    // Optional GeoLite2-Country lookup of the access log (vempain.site.geoip.database); the database itself is not shipped
+    // Optional GeoLite2-City lookup of the access log (vempain.site.geoip.database); the database itself is not shipped
     implementation "com.maxmind.geoip2:geoip2:${libs.versions.geoip2.get()}"
     implementation 'org.springframework.security:spring-security-crypto'
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${libs.versions.springdoc.get()}"

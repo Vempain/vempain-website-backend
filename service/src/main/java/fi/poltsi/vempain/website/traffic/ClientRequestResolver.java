@@ -48,7 +48,9 @@ public class ClientRequestResolver {
     public ClientRequest resolve(HttpServletRequest request) {
         var address = resolveAddress(request);
         var userAgent = userAgent(request);
-        return new ClientRequest(address.ip(), address.source(), country(request, address.ip()), userAgent, isBot(userAgent));
+        var location = location(request, address.ip());
+        return new ClientRequest(address.ip(), address.source(), location.country(), location.city(), location.latitude(), location.longitude(), userAgent,
+                isBot(userAgent));
     }
 
     private record Address(String ip, String source) {}
@@ -93,16 +95,22 @@ public class ClientRequestResolver {
         return first;
     }
 
-    private String country(HttpServletRequest request, String ip) {
+    private GeoIpCountryLookup.GeoIpLocation location(HttpServletRequest request, String ip) {
+        var location = countryLookup.location(ip)
+            .orElse(GeoIpCountryLookup.GeoIpLocation.unknown());
+        if (location.country() == null
+            || location.country()
+                .isBlank()) {
+            location = location.withCountry(ClientRequest.UNKNOWN_COUNTRY);
+        }
         if (mode == ProxyMode.CLOUDFLARE) {
             var header = request.getHeader(CLOUDFLARE_COUNTRY_HEADER);
             if (header != null
                 && header.matches("[A-Za-z]{2}")) {
-                return header.toUpperCase(Locale.ROOT);
+                return location.withCountry(header.toUpperCase(Locale.ROOT));
             }
         }
-        return countryLookup.country(ip)
-            .orElse(ClientRequest.UNKNOWN_COUNTRY);
+        return location;
     }
 
     private static String userAgent(HttpServletRequest request) {

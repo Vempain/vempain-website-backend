@@ -71,7 +71,7 @@ class AccessLogFilterUTC {
             .setEnabled(enabled);
         properties.getProxy()
             .setMode(mode);
-        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup(address -> Optional.of("SE")));
+        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.of("SE")));
         return new AccessLogFilter(properties, resolver, metrics, objectMapper, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -113,8 +113,10 @@ class AccessLogFilterUTC {
         var requestId = response.getHeader(AccessLogFilter.REQUEST_ID_HEADER);
         assertNotNull(requestId);
         var line = onlyLine();
-        assertEquals(List.of("ts", "type", "method", "path", "query", "status", "duration_ms", "bytes", "client_ip", "client_source", "country", "user_agent",
-                "referer", "bot", "user", "request_id", "trace_id", "span_id"), List.copyOf(line.keySet()), "the agreed field names in order");
+        assertEquals(
+                List.of("ts", "type", "method", "path", "query", "status", "duration_ms", "bytes", "client_ip", "client_source", "country", "city", "latitude",
+                        "longitude", "user_agent", "referer", "bot", "user", "request_id", "trace_id", "span_id"),
+                List.copyOf(line.keySet()), "the agreed field names in order");
         assertEquals("2026-10-19T10:00:00.123Z", line.get("ts"));
         assertEquals("access", line.get("type"));
         assertEquals("GET", line.get("method"));
@@ -243,7 +245,7 @@ class AccessLogFilterUTC {
     void theTraceAndSpanOfTheRequestAreTakenFromTheObservationContext() throws Exception {
         var tracer = new SimpleTracer();
         var properties = new SiteProperties();
-        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup(address -> Optional.empty()));
+        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.empty()));
         var filter = new AccessLogFilter(properties, resolver, metrics, objectMapper, Clock.fixed(NOW, ZoneOffset.UTC), tracer);
         var request = request("GET", "/api/pages");
         var response = new MockHttpServletResponse();
@@ -279,7 +281,7 @@ class AccessLogFilterUTC {
     void withATracerButNoSpanTheIdsStayNull() throws Exception {
         var tracer = new SimpleTracer();
         var properties = new SiteProperties();
-        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup(address -> Optional.empty()));
+        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.empty()));
         var filter = new AccessLogFilter(properties, resolver, metrics, objectMapper, Clock.fixed(NOW, ZoneOffset.UTC), tracer);
         var response = new MockHttpServletResponse();
 

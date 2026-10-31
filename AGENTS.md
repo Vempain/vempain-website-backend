@@ -95,13 +95,15 @@ treated as a supported implementation.
   every outcome is logged, including 404s and the 401 of an expired token. It writes one JSON object per request through the logger
   `vempain.site.access`, which has its own `%msg%n` console appender in `logback-spring.xml` (additivity off), sets `X-Request-Id`, skips
   `/health`, and feeds `WebsiteMetrics.accessRequest`/`accessCountry`. The field names (`ts`, `type`, `method`, `path`, `query`, `status`,
-  `duration_ms`, `bytes`, `client_ip`, `client_source`, `country`, `user_agent`, `referer`, `bot`, `user`, `request_id`, `trace_id`,
+  `duration_ms`, `bytes`, `client_ip`, `client_source`, `country`, `city`, `latitude`, `longitude`, `user_agent`, `referer`, `bot`, `user`, `request_id`,
+  `trace_id`,
   `span_id`) are a contract
   with the Alloy pipeline and the Grafana dashboard in `vempain-cluster`; change them there too.
 - `traffic/ClientRequestResolver` finds the real client: `vempain.site.proxy.mode` (`none|cloudflare|forwarded`, `ProxyMode`) decides which
   header is trusted, and only that header is read; `none` never reads a proxy header. The country comes from `CF-IPCountry` in Cloudflare
-  mode, else from `traffic/GeoIpCountryLookup` (optional GeoLite2-Country database, `vempain.site.geoip.database`; never throws, private
-  addresses are not looked up), else `unknown`. The user agent is truncated to 512 characters and classified with the `BOT_MARKERS` list.
+  mode, else from `traffic/GeoIpCountryLookup` (optional GeoLite2-City database, `vempain.site.geoip.database`; never throws, private
+  addresses are not looked up), else `unknown`. City coordinates are emitted only as bounded location metric labels and structured-log fields; raw IPs
+  remain in the access log. The user agent is truncated to 512 characters and classified with the `BOT_MARKERS` list.
 - The user is read from the request attribute `CurrentUserProvider.REQUEST_ATTRIBUTE`, not from `CurrentUserProvider`, because the
   request context is already gone when the chain returns to the first filter. For the same reason the trace and span ids are read from
   the observation context that `ServerHttpObservationFilter` leaves on the request (its server span is already closed), with the

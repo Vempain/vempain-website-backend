@@ -144,4 +144,20 @@ public class WebsiteMetrics {
                                                                    || country.isBlank() ? "unknown" : country)
             .increment();
     }
+
+    public void accessLocation(String country, String city, Double latitude, Double longitude) {
+        if (latitude == null
+            || longitude == null) {
+            return;
+        }
+        registry
+            .counter("vempain.site.access.locations", "country", value(country), "city", value(city), "latitude", latitude.toString(), "longitude",
+                    longitude.toString())
+            .increment();
+    }
+
+    private static String value(String value) {
+        return value == null
+               || value.isBlank() ? "unknown" : value;
+    }
 }

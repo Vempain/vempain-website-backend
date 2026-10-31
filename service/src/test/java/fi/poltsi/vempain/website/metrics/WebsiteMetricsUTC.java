@@ -112,6 +112,7 @@ class WebsiteMetricsUTC {
         metrics.accessCountry("FI");
         metrics.accessCountry(null);
         metrics.accessCountry(" ");
+        metrics.accessLocation("FI", "Helsinki", 60.1699, 24.9384);
 
         assertEquals(2.0, registry.get("vempain.site.access.requests")
             .tags("status_class", "2xx", "method", "GET", "client_source", "cloudflare", "bot", "false")
@@ -131,6 +132,10 @@ class WebsiteMetricsUTC {
             .count());
         assertEquals(2.0, registry.get("vempain.site.access.country")
             .tag("country", "unknown")
+            .counter()
+            .count());
+        assertEquals(1.0, registry.get("vempain.site.access.locations")
+            .tags("country", "FI", "city", "Helsinki", "latitude", "60.1699", "longitude", "24.9384")
             .counter()
             .count());
     }

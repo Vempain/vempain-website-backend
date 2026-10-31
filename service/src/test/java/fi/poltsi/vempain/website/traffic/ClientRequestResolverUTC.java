@@ -29,7 +29,7 @@ class ClientRequestResolverUTC {
     }
 
     private static GeoIpCountryLookup geoip(String country) {
-        return new GeoIpCountryLookup(address -> Optional.ofNullable(country));
+        return new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.ofNullable(country));
     }
 
     private static MockHttpServletRequest request(String remoteAddress, String userAgent) {
@@ -91,7 +91,7 @@ class ClientRequestResolverUTC {
         var realIp = request("10.0.0.2", BROWSER);
         realIp.addHeader("X-Real-IP", "[2001:db8::1]:443");
         var bare = request("10.0.0.2", BROWSER);
-        var resolver = resolver("forwarded", "", new GeoIpCountryLookup(address -> Optional.empty()));
+        var resolver = resolver("forwarded", "", new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.empty()));
 
         assertEquals("203.0.113.10", resolver.resolve(forwarded)
             .clientIp());
@@ -113,7 +113,8 @@ class ClientRequestResolverUTC {
         request.addHeader("X-Forwarded-For", "203.0.113.10");
         request.addHeader("True-Client-IP", "203.0.113.12");
 
-        var client = resolver("forwarded", "True-Client-IP", new GeoIpCountryLookup(address -> Optional.empty())).resolve(request);
+        var client = resolver("forwarded", "True-Client-IP", new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.empty()))
+            .resolve(request);
 
         assertEquals("203.0.113.12", client.clientIp());
     }
