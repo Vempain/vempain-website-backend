@@ -104,7 +104,7 @@ class TraceContinuationCTC {
                     new PropagatingReceiverTracingObservationHandler<>(tracer, propagator), new DefaultTracingObservationHandler(tracer)));
 
         var properties = new SiteProperties();
-        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup(address -> Optional.empty()));
+        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.empty()));
         var accessLog = new AccessLogFilter(properties, resolver, new WebsiteMetrics(new SimpleMeterRegistry()), objectMapper, java.time.Clock.systemUTC(),
                 tracer);
         // The order of the application: the access log first, then Boot's server observation filter which opens the server span

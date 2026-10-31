@@ -50,7 +50,7 @@ class GeoIpCountryLookupUTC {
     @Test
     void privateLoopbackAndBrokenAddressesAreNeverLookedUp() {
         var calls = new java.util.ArrayList<String>();
-        var lookup = new GeoIpCountryLookup(address -> {
+        var lookup = new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> {
             calls.add(address.getHostAddress());
             return Optional.of("fi");
         });
@@ -71,12 +71,22 @@ class GeoIpCountryLookupUTC {
 
     @Test
     void aFailingOrEmptyDatabaseAnswerIsUnknown() {
-        var failing = new GeoIpCountryLookup(address -> {
+        var failing = new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> {
             throw new IOException("database gone");
         });
-        var blank = new GeoIpCountryLookup(address -> Optional.of(" "));
+        var blank = new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.of(" "));
 
         assertEquals(Optional.empty(), failing.country("203.0.113.9"));
         assertEquals(Optional.empty(), blank.country("203.0.113.9"));
+    }
+
+    @Test
+    void cityLocationIncludesCoordinatesAndCountry() {
+        var lookup = new GeoIpCountryLookup(
+                (GeoIpCountryLookup.LocationSource) address -> Optional.of(new GeoIpCountryLookup.GeoIpLocation("fi", "Helsinki", 60.1699, 24.9384)));
+
+        assertEquals(Optional.of("FI"), lookup.country("203.0.113.9"));
+        assertEquals(new GeoIpCountryLookup.GeoIpLocation("FI", "Helsinki", 60.1699, 24.9384), lookup.location("203.0.113.9")
+            .orElseThrow());
     }
 }

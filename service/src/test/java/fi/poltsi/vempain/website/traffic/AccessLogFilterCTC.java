@@ -51,7 +51,7 @@ class AccessLogFilterCTC {
         accessLogger.addAppender(lines);
 
         var properties = new SiteProperties();
-        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup(address -> Optional.empty()));
+        var resolver = new ClientRequestResolver(properties, new GeoIpCountryLookup((GeoIpCountryLookup.CountrySource) address -> Optional.empty()));
         var accessLog = new AccessLogFilter(properties, resolver, new WebsiteMetrics(new SimpleMeterRegistry()), objectMapper, java.time.Clock.systemUTC());
         var jwt = mock(JwtService.class);
         var cookies = mock(AuthCookieWriter.class);

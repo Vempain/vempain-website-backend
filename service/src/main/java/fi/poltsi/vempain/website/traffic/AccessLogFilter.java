@@ -146,6 +146,7 @@ public class AccessLogFilter extends OncePerRequestFilter {
             var method = method(request);
             metrics.accessRequest(statusClass, method, client.clientSource(), client.bot(), durationNanos);
             metrics.accessCountry(client.country());
+            metrics.accessLocation(client.country(), client.city(), client.latitude(), client.longitude());
 
             var line = new LinkedHashMap<String, Object>();
             line.put("ts", started.toString());
@@ -159,6 +160,9 @@ public class AccessLogFilter extends OncePerRequestFilter {
             line.put("client_ip", client.clientIp());
             line.put("client_source", client.clientSource());
             line.put("country", client.country());
+            line.put("city", client.city());
+            line.put("latitude", client.latitude());
+            line.put("longitude", client.longitude());
             line.put("user_agent", client.userAgent());
             line.put("referer", request.getHeader("Referer"));
             line.put("bot", client.bot());
