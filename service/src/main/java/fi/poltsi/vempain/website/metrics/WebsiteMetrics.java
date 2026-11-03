@@ -31,6 +31,7 @@ public class WebsiteMetrics {
     private final MeterRegistry registry;
     private final Counter resourceBytes;
     private final Counter tokensRevoked;
+    private final Counter tokensExpired;
     private final Timer searchDuration;
     private final DistributionSummary searchResults;
 
@@ -42,6 +43,9 @@ public class WebsiteMetrics {
             .register(registry);
         this.tokensRevoked = Counter.builder("vempain.site.tokens.revoked")
             .description("Visitor sessions ended by logout")
+            .register(registry);
+        this.tokensExpired = Counter.builder("vempain.site.tokens.expired")
+            .description("Expired visitor session tokens removed by the clean-up job")
             .register(registry);
         this.searchDuration = Timer.builder("vempain.site.search.duration")
             .description("Subject searches")
@@ -77,6 +81,10 @@ public class WebsiteMetrics {
 
     public void tokenRevoked() {
         tokensRevoked.increment();
+    }
+
+    public void tokensExpired(long count) {
+        tokensExpired.increment(count);
     }
 
     public <T> T timeSearch(Supplier<T> search) {

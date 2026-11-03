@@ -28,6 +28,17 @@ public class SiteProperties {
     private long jwtTtlSeconds = 1200L;
 
     /**
+     * The session slides only when the token has less than this many seconds left; 0 means half of the lifetime. Refreshing on every request would store a new
+     * token per request (identical ones within a second), so the refresh happens once per window.
+     */
+    private long jwtRefreshThresholdSeconds = 0L;
+
+    /**
+     * How long a replaced token stays valid after a refresh, so that the requests a page fires in parallel with the old cookie still pass.
+     */
+    private long jwtRefreshGraceSeconds = 60L;
+
+    /**
      * Name of the HttpOnly cookie carrying the JWT.
      */
     private String jwtCookieName = "OXALATE_JWT_TOKEN";
@@ -79,6 +90,22 @@ public class SiteProperties {
 
     public void setJwtTtlSeconds(long jwtTtlSeconds) {
         this.jwtTtlSeconds = jwtTtlSeconds;
+    }
+
+    public long getJwtRefreshThresholdSeconds() {
+        return jwtRefreshThresholdSeconds;
+    }
+
+    public void setJwtRefreshThresholdSeconds(long jwtRefreshThresholdSeconds) {
+        this.jwtRefreshThresholdSeconds = jwtRefreshThresholdSeconds;
+    }
+
+    public long getJwtRefreshGraceSeconds() {
+        return jwtRefreshGraceSeconds;
+    }
+
+    public void setJwtRefreshGraceSeconds(long jwtRefreshGraceSeconds) {
+        this.jwtRefreshGraceSeconds = jwtRefreshGraceSeconds;
     }
 
     public String getJwtCookieName() {

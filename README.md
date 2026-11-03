@@ -44,34 +44,37 @@ JWT signing and verification (HS256) is implemented directly on the JDK crypto A
 
 Every setting is bound to the environment variables used by the current Vempain deployment.
 
-|          Environment variable           |                      Property                       |               Default               |
-|-----------------------------------------|-----------------------------------------------------|-------------------------------------|
-| `ENV_VEMPAIN_SITE_DB_HOST`              | `spring.datasource.url`                             | `127.0.0.1`                         |
-| `ENV_VEMPAIN_SITE_DB_PORT`              | `spring.datasource.url`                             | `5434`                              |
-| `ENV_VEMPAIN_SITE_DB_NAME`              | `spring.datasource.url`                             | `vempain_site_db`                   |
-| `ENV_VEMPAIN_SITE_DB_SCHEMA`            | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                      |
-| `ENV_VEMPAIN_SITE_DB_USER`              | `spring.datasource.username`                        | `vempain_site`                      |
-| `ENV_VEMPAIN_SITE_DB_PASSWORD`          | `spring.datasource.password`                        | -                                   |
-| `JWT_SECRET`                            | `vempain.site.jwt-secret`                           | required (no fallback)              |
-| `JWT_TTL_SECONDS`                       | `vempain.site.jwt-ttl-seconds`                      | `1200`                              |
-| `COOKIE_SECURE`                         | `vempain.site.jwt-cookie-secure`                    | `true` (local profile: `false`)     |
-| `VEMPAIN_WEBSITE_WEB_ROOT`              | `vempain.site.files-root`                           | `/files`                            |
-| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS`        | `vempain.site.cors-allowed-origins`                 | no cross-origin requests            |
-| `VEMPAIN_METRICS_ENABLED`               | `vempain.metrics.enabled`                           | `false`                             |
-| `VEMPAIN_METRICS_URL`                   | `vempain.metrics.url`                               | - (OTLP/HTTP metrics endpoint)      |
-| `VEMPAIN_METRICS_USERNAME`              | `vempain.metrics.username`                          | - (basic auth of the endpoint)      |
-| `VEMPAIN_METRICS_PASSWORD`              | `vempain.metrics.password`                          | -                                   |
-| `VEMPAIN_METRICS_CERTIFICATE`           | `vempain.metrics.certificate`                       | - (PEM to trust, self-signed)       |
-| `VEMPAIN_METRICS_STEP`                  | `vempain.metrics.step`                              | `1m`                                |
-| `VEMPAIN_METRICS_ROLE`                  | `management.metrics.tags.role`                      | `api`                               |
-| `VEMPAIN_TRACING_ENABLED`               | `vempain.tracing.enabled`                           | `false`                             |
-| `VEMPAIN_TRACING_URL`                   | `vempain.tracing.url`                               | - (OTLP/HTTP traces endpoint)       |
-| `VEMPAIN_TRACING_SAMPLING`              | `vempain.tracing.sampling`                          | `1.0` (0..1 of traces kept)         |
-| `VEMPAIN_SITE_PROXY_MODE`               | `vempain.site.proxy.mode`                           | `none` (`cloudflare`, `forwarded`)  |
-| `VEMPAIN_SITE_PROXY_TRUSTED_HEADER`     | `vempain.site.proxy.trusted-header`                 | - (the mode's default header)       |
-| `VEMPAIN_SITE_GEOIP_DATABASE`           | `vempain.site.geoip.database`                       | - (GeoLite2-City `.mmdb`)           |
-| `VEMPAIN_SITE_ACCESS_LOG_ENABLED`       | `vempain.site.access-log.enabled`                   | `true`                              |
-| `VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY` | `server.forward-headers-strategy`                   | `none` (`framework` behind a proxy) |
+|          Environment variable           |                      Property                       |                      Default                      |
+|-----------------------------------------|-----------------------------------------------------|---------------------------------------------------|
+| `ENV_VEMPAIN_SITE_DB_HOST`              | `spring.datasource.url`                             | `127.0.0.1`                                       |
+| `ENV_VEMPAIN_SITE_DB_PORT`              | `spring.datasource.url`                             | `5434`                                            |
+| `ENV_VEMPAIN_SITE_DB_NAME`              | `spring.datasource.url`                             | `vempain_site_db`                                 |
+| `ENV_VEMPAIN_SITE_DB_SCHEMA`            | `spring.datasource.url`, `hibernate.default_schema` | `vempain_site`                                    |
+| `ENV_VEMPAIN_SITE_DB_USER`              | `spring.datasource.username`                        | `vempain_site`                                    |
+| `ENV_VEMPAIN_SITE_DB_PASSWORD`          | `spring.datasource.password`                        | -                                                 |
+| `JWT_SECRET`                            | `vempain.site.jwt-secret`                           | required (no fallback)                            |
+| `JWT_TTL_SECONDS`                       | `vempain.site.jwt-ttl-seconds`                      | `1200`                                            |
+| `VEMPAIN_JWT_CLEANUP_ENABLED`           | `vempain.jwt-cleanup.enabled`                       | `true` (hourly removal of expired session tokens) |
+| `VEMPAIN_JWT_CLEANUP_CRON`              | `vempain.jwt-cleanup.cron`                          | `0 15 * * * *`                                    |
+| `VEMPAIN_SCHEDULING_ENABLED`            | `vempain.scheduling.enabled`                        | `true` (set false on all but one replica)         |
+| `COOKIE_SECURE`                         | `vempain.site.jwt-cookie-secure`                    | `true` (local profile: `false`)                   |
+| `VEMPAIN_WEBSITE_WEB_ROOT`              | `vempain.site.files-root`                           | `/files`                                          |
+| `ENV_VEMPAIN_CORS_ALLOW_ORIGINS`        | `vempain.site.cors-allowed-origins`                 | no cross-origin requests                          |
+| `VEMPAIN_METRICS_ENABLED`               | `vempain.metrics.enabled`                           | `false`                                           |
+| `VEMPAIN_METRICS_URL`                   | `vempain.metrics.url`                               | - (OTLP/HTTP metrics endpoint)                    |
+| `VEMPAIN_METRICS_USERNAME`              | `vempain.metrics.username`                          | - (basic auth of the endpoint)                    |
+| `VEMPAIN_METRICS_PASSWORD`              | `vempain.metrics.password`                          | -                                                 |
+| `VEMPAIN_METRICS_CERTIFICATE`           | `vempain.metrics.certificate`                       | - (PEM to trust, self-signed)                     |
+| `VEMPAIN_METRICS_STEP`                  | `vempain.metrics.step`                              | `1m`                                              |
+| `VEMPAIN_METRICS_ROLE`                  | `management.metrics.tags.role`                      | `api`                                             |
+| `VEMPAIN_TRACING_ENABLED`               | `vempain.tracing.enabled`                           | `false`                                           |
+| `VEMPAIN_TRACING_URL`                   | `vempain.tracing.url`                               | - (OTLP/HTTP traces endpoint)                     |
+| `VEMPAIN_TRACING_SAMPLING`              | `vempain.tracing.sampling`                          | `1.0` (0..1 of traces kept)                       |
+| `VEMPAIN_SITE_PROXY_MODE`               | `vempain.site.proxy.mode`                           | `none` (`cloudflare`, `forwarded`)                |
+| `VEMPAIN_SITE_PROXY_TRUSTED_HEADER`     | `vempain.site.proxy.trusted-header`                 | - (the mode's default header)                     |
+| `VEMPAIN_SITE_GEOIP_DATABASE`           | `vempain.site.geoip.database`                       | - (GeoLite2-City `.mmdb`)                         |
+| `VEMPAIN_SITE_ACCESS_LOG_ENABLED`       | `vempain.site.access-log.enabled`                   | `true`                                            |
+| `VEMPAIN_SITE_FORWARD_HEADERS_STRATEGY` | `server.forward-headers-strategy`                   | `none` (`framework` behind a proxy)               |
 
 ## Metrics
 

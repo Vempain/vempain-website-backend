@@ -133,7 +133,7 @@ class ResponseContractJTC {
     void directoryModelsMatch() {
         assertEquals(Set.of("name"), keys(PageDirectoryResponse.builder()
             .build()));
-        assertEquals(Set.of("title", "key", "is_leaf", "children"), keys(DirectoryNodeResponse.builder()
+        assertEquals(Set.of("title", "name", "key", "is_leaf", "children"), keys(DirectoryNodeResponse.builder()
             .build()));
     }
 

@@ -21,9 +21,19 @@ public interface WebSiteJwtTokenRepository extends JpaRepository<WebSiteJwtToken
     @Query("SELECT COUNT(t) FROM WebSiteJwtToken t WHERE t.expiresAt > :now")
     long countValid(@Param("now") LocalDateTime now);
 
+    /** Whether the exact token was already recorded; the same claims within one second sign to the same token */
+    boolean existsByToken(String token);
+
     @Modifying
     @Query("DELETE FROM WebSiteJwtToken t WHERE t.token = :token")
     int deleteByToken(@Param("token") String token);
+
+    /**
+     * Ends the token at {@code expiresAt} unless it ends earlier already: a replaced token stays valid for a short grace period only.
+     */
+    @Modifying
+    @Query("UPDATE WebSiteJwtToken t SET t.expiresAt = :expiresAt WHERE t.token = :token AND t.expiresAt > :expiresAt")
+    int shortenExpiry(@Param("token") String token, @Param("expiresAt") LocalDateTime expiresAt);
 
     @Modifying
     @Query("DELETE FROM WebSiteJwtToken t WHERE t.expiresAt <= :now")
