@@ -49,7 +49,7 @@ class JwtAuthenticationFilterUTC {
         when(cookies.readToken(any())).thenReturn("active");
         when(jwt.verify("active")).thenReturn(Optional.of(user));
         when(jwt.isPersistedAndValid("active")).thenReturn(true);
-        when(jwt.refresh(user)).thenReturn("refreshed");
+        when(jwt.refresh(user)).thenReturn(Optional.of("refreshed"));
         when(jwt.ttlSeconds()).thenReturn(1200L);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -57,6 +57,26 @@ class JwtAuthenticationFilterUTC {
         new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, new MockFilterChain());
 
         verify(cookies).write(response, "refreshed", 1200L);
+        // the persisted check runs once per request, not once per use
+        verify(jwt, org.mockito.Mockito.times(1)).isPersistedAndValid("active");
+    }
+
+    @Test
+    void activeTokenThatIsNotDueForARefreshKeepsItsCookie() throws Exception {
+        JwtService jwt = mock(JwtService.class);
+        AuthCookieWriter cookies = mock(AuthCookieWriter.class);
+        AuthenticatedUser user = new AuthenticatedUser(7, "alice", false, "active");
+        when(cookies.readToken(any())).thenReturn("active");
+        when(jwt.verify("active")).thenReturn(Optional.of(user));
+        when(jwt.isPersistedAndValid("active")).thenReturn(true);
+        when(jwt.refresh(user)).thenReturn(Optional.empty());
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        new JwtAuthenticationFilter(jwt, cookies, new ObjectMapper()).doFilter(request, response, new MockFilterChain());
+
+        org.junit.jupiter.api.Assertions.assertSame(user, request.getAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE));
+        verify(cookies, never()).write(any(), anyString(), anyLong());
     }
 
     @Test

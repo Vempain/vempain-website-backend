@@ -52,6 +52,10 @@ treated as a supported implementation.
   the gallery's first image file. Site name and description come from the `site.name`/`site.description` configuration rows. A route
   the caller may not see, or that does not exist, yields the site level metadata with the route as path; it never throws, because a
   link preview must not reveal whether restricted content exists.
+- `PageService.directoryTree` (`GET /public/page-directories/{directory}/tree`, `DirectoryNodeResponse`) is the navigation tree of the
+  website frontend's sidebar: `title` is the label shown there (the page `header`, for a directory the header of its `index` page, the
+  path segment only when the header is blank), `name` the path segment, `key` the page path of a leaf or the segment of a directory.
+  Nodes are matched by `name`, never by `title`. Tested in `PageServiceUTC` and `PageControllerCTC`.
 - `PageService.page` attaches it as `WebSitePageResponse.open_graph` (null in listings and `children`); `OpenGraphResponse` mirrors
   `vempain-website-frontend/src/models/OpenGraph.ts` and is pinned by `ResponseContractJTC`.
 - `OpenGraphApi` (`/api/public/open-graph/**`, the frontend route after the base path) serves the same metadata as JSON, and as a
@@ -61,6 +65,11 @@ treated as a supported implementation.
 
 ## Authentication and authorization
 
+- `auth/JwtTokenCleanupSchedule` removes the expired rows of `web_site_jwt_token` (`WebSiteJwtTokenRepository.deleteExpired`) hourly
+  (`vempain.jwt-cleanup.cron`, default `0 15 * * * *`; `vempain.jwt-cleanup.enabled` and the shared `vempain.scheduling.enabled` switch it
+  off), because a session that ends by expiry leaves its row behind. `config/SchedulingConfiguration` enables `@Scheduled`; a new job
+  must check `vempain.scheduling.enabled` the same way so that only one replica runs it. The removed rows are counted as
+  `vempain.site.tokens.expired`. Tested in `JwtTokenCleanupScheduleUTC`.
 - Authentication is cookie based and self-contained: `service/.../auth/` (`JwtService`, `JwtAuthenticationFilter`, `AuthCookieWriter`,
   `CurrentUserProvider`, `PasswordVerifier`) issues an `HttpOnly` session cookie and mirrors refreshed tokens in the `X-Auth-Token` header.
   This backend deliberately has no `vempain-auth-*` dependency; it is the documented exception to the shared-auth rule of the admin and file

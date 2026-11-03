@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 public class PageService {
 
     private static final Pattern SEARCH = Pattern.compile("\"([^\"]+)\"|(\\S+)");
+    /** The page that stands for its directory in the navigation */
+    private static final String INDEX_PAGE = "index";
 
     private final WebSitePageRepository pages;
     private final ResponseMapperService mapper;
@@ -75,7 +77,8 @@ public class PageService {
 
     /**
      * Builds the directory tree below {@code directory}. Intermediate nodes carry the path segment as key, leaves carry the full page path and
-     * {@code is_leaf = true}.
+     * {@code is_leaf = true}. Every node carries its path segment as {@code name} and, as {@code title}, the label the navigation shows: the header of the
+     * page, for a directory the header of its {@code index} page, and the segment when there is no header.
      */
     public List<DirectoryNodeResponse> directoryTree(String directory, long userId) {
         if (directory == null
@@ -89,22 +92,31 @@ public class PageService {
                     .length(), directory.length() + 1));
             String[] parts = relative.split("/");
             List<DirectoryNodeResponse> level = root;
+            DirectoryNodeResponse parent = null;
             for (int i = 0; i < parts.length; i++) {
                 String key = parts[i];
                 boolean leaf = i == parts.length - 1;
                 DirectoryNodeResponse node = level.stream()
-                    .filter(candidate -> key.equals(candidate.getTitle()))
+                    .filter(candidate -> key.equals(candidate.getName()))
                     .findFirst()
                     .orElse(null);
                 if (node == null) {
                     node = DirectoryNodeResponse.builder()
-                        .title(key)
+                        .title(leaf ? labelOf(page, key) : key)
+                        .name(key)
                         .key(leaf ? page.getFilePath() : key)
                         .isLeaf(leaf)
                         .children(leaf ? null : new ArrayList<>())
                         .build();
                     level.add(node);
                 }
+                if (leaf
+                    && INDEX_PAGE.equals(key)
+                    && parent != null) {
+                    // The directory node stands for its index page in the navigation, so it shows that page's header
+                    parent.setTitle(labelOf(page, parent.getName()));
+                }
+                parent = node;
                 if (!leaf) {
                     if (node.getChildren() == null) {
                         node.setChildren(new ArrayList<>());
@@ -122,6 +134,13 @@ public class PageService {
             throw ApiException.notFound("Page not found");
         }
         access.requireAccess(page.getAclId());
+    }
+
+    /** The navigation label of a page: its header, or the path segment when the header is blank */
+    private static String labelOf(WebSitePage page, String segment) {
+        String header = page.getHeader();
+        return header == null
+               || header.isBlank() ? segment : header.strip();
     }
 
     private List<String> tokenize(String search) {

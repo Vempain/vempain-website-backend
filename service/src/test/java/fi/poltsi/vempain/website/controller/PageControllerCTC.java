@@ -61,7 +61,8 @@ class PageControllerCTC {
             .name("photos")
             .build()));
         when(pages.directoryTree("photos", -1L)).thenReturn(List.of(DirectoryNodeResponse.builder()
-            .title("summer")
+            .title("Summer trip")
+            .name("summer")
             .key("photos/summer")
             .isLeaf(true)
             .build()));
@@ -97,7 +98,7 @@ class PageControllerCTC {
         mvc.perform(get("/api/public/page-directories/photos/tree"))
             .andExpect(status().isOk())
             .andExpect(content().json("""
-                    [{"title":"summer","key":"photos/summer","is_leaf":true,"children":null}]
+                    [{"title":"Summer trip","name":"summer","key":"photos/summer","is_leaf":true,"children":null}]
                     """));
     }
 

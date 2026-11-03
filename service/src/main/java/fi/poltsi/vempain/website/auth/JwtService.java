@@ -3,9 +3,9 @@ package fi.poltsi.vempain.website.auth;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,6 +16,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,8 +40,15 @@ public class JwtService {
     private final WebSiteJwtTokenRepository jwtTokenRepository;
     private final SiteProperties siteProperties;
     private final ObjectMapper objectMapper;
+    private final Clock clock;
 
+    @Autowired
     public JwtService(WebSiteJwtTokenRepository jwtTokenRepository, SiteProperties siteProperties, ObjectMapper objectMapper) {
+        this(jwtTokenRepository, siteProperties, objectMapper, Clock.systemDefaultZone());
+    }
+
+    JwtService(WebSiteJwtTokenRepository jwtTokenRepository, SiteProperties siteProperties, ObjectMapper objectMapper, Clock clock) {
+        this.clock = clock;
         this.jwtTokenRepository = jwtTokenRepository;
         this.siteProperties = siteProperties;
         this.objectMapper = objectMapper;
@@ -73,7 +81,7 @@ public class JwtService {
      */
     @Transactional
     public String issueToken(long userId, String username, boolean globalPermission) {
-        Instant issuedAt = Instant.now();
+        Instant issuedAt = Instant.now(clock);
         Instant expiresAt = issuedAt.plusSeconds(ttlSeconds());
 
         Map<String, Object> claims = new LinkedHashMap<>();
@@ -84,8 +92,11 @@ public class JwtService {
         claims.put("exp", expiresAt.getEpochSecond());
 
         String token = sign(claims);
-        jwtTokenRepository.save(new WebSiteJwtToken(userId, token, LocalDateTime.ofInstant(issuedAt, ZoneId.systemDefault()),
-                LocalDateTime.ofInstant(expiresAt, ZoneId.systemDefault())));
+        // The claims carry whole seconds, so two issues within one second sign to the same token; it is recorded once
+        if (!jwtTokenRepository.existsByToken(token)) {
+            jwtTokenRepository.save(new WebSiteJwtToken(userId, token, LocalDateTime.ofInstant(issuedAt, clock.getZone()),
+                    LocalDateTime.ofInstant(expiresAt, clock.getZone())));
+        }
 
         return token;
     }
@@ -119,7 +130,7 @@ public class JwtService {
             Map<String, Object> claims = readClaims(parts[1]);
             long expiresAt = longClaim(claims.get("exp"), 0L);
             if (expiresAt > 0L
-                && Instant.now()
+                && Instant.now(clock)
                     .getEpochSecond() >= expiresAt) {
                 throw new TokenExpiredException("Session expired");
             }
@@ -138,10 +149,53 @@ public class JwtService {
     }
 
     /**
-     * Issues a fresh token for the same claims. Used to slide the session window on every authenticated request.
+     * Slides the session window: once the token has less than the refresh threshold left (half of the lifetime by default), a fresh token is issued for the
+     * same claims and the old one is shortened to the grace period, so that the requests a page fires in parallel with the old cookie still pass while the old
+     * token cannot outlive the new one. Earlier in the lifetime nothing happens, which keeps one row per session in the database instead of one per request.
+     *
+     * @return the fresh token to put into the cookie, or empty when the current one is still good
      */
-    public String refresh(AuthenticatedUser user) {
-        return issueToken(user.userId(), user.username(), user.globalPermission());
+    @Transactional
+    public Optional<String> refresh(AuthenticatedUser user) {
+        long now = Instant.now(clock)
+            .getEpochSecond();
+        long remaining = expiresAt(user.token()) - now;
+        if (remaining > refreshThresholdSeconds()) {
+            return Optional.empty();
+        }
+        String fresh = issueToken(user.userId(), user.username(), user.globalPermission());
+        if (!fresh.equals(user.token())) {
+            LocalDateTime graceEnd = LocalDateTime.ofInstant(Instant.ofEpochSecond(now + refreshGraceSeconds()), clock.getZone());
+            jwtTokenRepository.shortenExpiry(user.token(), graceEnd);
+        }
+        return Optional.of(fresh);
+    }
+
+    /** The {@code exp} claim of a token in epoch seconds, 0 when it cannot be read */
+    long expiresAt(String token) {
+        if (token == null) {
+            return 0L;
+        }
+        String[] parts = token.split("\\.");
+        if (parts.length != 3) {
+            return 0L;
+        }
+        try {
+            return longClaim(readClaims(parts[1]).get("exp"), 0L);
+        } catch (RuntimeException failure) {
+            return 0L;
+        }
+    }
+
+    /** Seconds of remaining lifetime below which the session slides; the configured value, else half of the lifetime */
+    public long refreshThresholdSeconds() {
+        long configured = siteProperties.getJwtRefreshThresholdSeconds();
+        return configured > 0L ? Math.min(configured, ttlSeconds()) : ttlSeconds() / 2;
+    }
+
+    /** How long a replaced token stays valid after a refresh */
+    public long refreshGraceSeconds() {
+        return Math.max(0L, siteProperties.getJwtRefreshGraceSeconds());
     }
 
     @Transactional
@@ -165,7 +219,7 @@ public class JwtService {
             return Optional.empty();
         }
 
-        return jwtTokenRepository.findValidToken(token, LocalDateTime.now())
+        return jwtTokenRepository.findValidToken(token, LocalDateTime.now(clock))
             .map(WebSiteJwtToken::getUserId);
     }
 

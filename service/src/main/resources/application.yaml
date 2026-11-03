@@ -65,6 +65,10 @@ vempain:
     files-root: override-me
     jwt-secret: override-me
     jwt-ttl-seconds: 1200
+    # The session slides once the token has less than this many seconds left (0 = half of the lifetime); a replaced token stays valid
+    # for the grace period so that requests fired in parallel with the old cookie still pass
+    jwt-refresh-threshold-seconds: ${JWT_REFRESH_THRESHOLD_SECONDS:0}
+    jwt-refresh-grace-seconds: ${JWT_REFRESH_GRACE_SECONDS:60}
     jwt-cookie-name: OXALATE_JWT_TOKEN
     jwt-cookie-secure: true
     cors-allowed-origins: override-me
@@ -78,6 +82,13 @@ vempain:
     # One JSON line per request on stdout through the logger vempain.site.access (shipped to Loki by the host's log collector)
     access-log:
       enabled: ${VEMPAIN_SITE_ACCESS_LOG_ENABLED:true}
+  # Scheduled jobs run only where this is true (one replica of a multi-replica deployment)
+  scheduling:
+    enabled: ${VEMPAIN_SCHEDULING_ENABLED:true}
+  # Removal of the expired visitor session tokens from web_site_jwt_token, so that the table does not grow with every visit
+  jwt-cleanup:
+    enabled: ${VEMPAIN_JWT_CLEANUP_ENABLED:true}
+    cron: ${VEMPAIN_JWT_CLEANUP_CRON:0 15 * * * *}
   # Push of the application metrics to the monitoring host (Prometheus OTLP receiver behind basic auth and a self-signed certificate)
   metrics:
     enabled: ${VEMPAIN_METRICS_ENABLED:false}

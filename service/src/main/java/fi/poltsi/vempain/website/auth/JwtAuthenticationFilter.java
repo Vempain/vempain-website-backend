@@ -56,15 +56,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
-            .ifPresent(authenticated -> request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, authenticated));
+        // A token that was revoked (or replaced long enough ago) is no longer recorded: the caller is anonymous and gets no new cookie
+        Optional<AuthenticatedUser> active = user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()));
+        active.ifPresent(authenticated -> request.setAttribute(CurrentUserProvider.REQUEST_ATTRIBUTE, authenticated));
 
         filterChain.doFilter(request, response);
 
-        if (user.filter(authenticated -> jwtService.isPersistedAndValid(authenticated.token()))
-            .isPresent()
+        if (active.isPresent()
             && !response.isCommitted()) {
-            cookieWriter.write(response, jwtService.refresh(user.orElseThrow()), jwtService.ttlSeconds());
+            // The session slides once per refresh window, not on every request (see JwtService.refresh)
+            jwtService.refresh(active.get())
+                .ifPresent(fresh -> cookieWriter.write(response, fresh, jwtService.ttlSeconds()));
         }
     }
 }

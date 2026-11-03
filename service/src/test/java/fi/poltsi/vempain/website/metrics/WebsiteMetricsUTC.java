@@ -64,6 +64,10 @@ class WebsiteMetricsUTC {
             .tag("result", "invalid_credentials")
             .counter()
             .count());
+        metrics.tokensExpired(4);
+        assertEquals(4.0, registry.get("vempain.site.tokens.expired")
+            .counter()
+            .count());
         assertEquals(1.0, registry.get("vempain.site.tokens.revoked")
             .counter()
             .count());

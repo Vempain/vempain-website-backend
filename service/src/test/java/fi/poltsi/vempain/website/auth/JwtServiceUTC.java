@@ -1,8 +1,10 @@
 package fi.poltsi.vempain.website.auth;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -53,10 +55,94 @@ class JwtServiceUTC {
             .orElseThrow()
             .globalPermission());
         verify(repository).save(any(WebSiteJwtToken.class));
-        String refreshed = service.refresh(new AuthenticatedUser(7, "alice", false, token));
-        assertNotEquals(token, refreshed);
+        // half of the 60 second lifetime is left at the earliest after 30 seconds: a fresh token is not due yet
+        assertTrue(service.refresh(new AuthenticatedUser(7, "alice", false, token))
+            .isEmpty());
         service.revoke(token);
         verify(repository).deleteByToken(token);
+    }
+
+    @Test
+    void theSessionSlidesOnceTheThresholdIsReachedAndTheOldTokenGetsAGracePeriod() {
+        var start = Instant.parse("2026-10-31T10:10:09Z");
+        var clock = new MutableClock(start);
+        var timed = new JwtService(repository, properties, new ObjectMapper(), clock);
+        String token = timed.issueToken(7, "alice", true);
+        verify(repository).save(any(WebSiteJwtToken.class));
+
+        // 29 seconds in: more than half of the 60 second lifetime is left, nothing happens
+        clock.advance(29);
+        assertTrue(timed.refresh(new AuthenticatedUser(7, "alice", true, token))
+            .isEmpty());
+        verify(repository, never()).shortenExpiry(any(), any());
+
+        // 31 seconds in: a fresh token is issued and the old one ends after the grace period
+        clock.advance(2);
+        properties.setJwtRefreshGraceSeconds(45);
+        String fresh = timed.refresh(new AuthenticatedUser(7, "alice", true, token))
+            .orElseThrow();
+        assertNotEquals(token, fresh);
+        assertEquals(start.plusSeconds(31 + 60)
+            .getEpochSecond(), timed.expiresAt(fresh));
+        verify(repository, org.mockito.Mockito.times(2)).save(any(WebSiteJwtToken.class));
+        verify(repository).shortenExpiry(token, LocalDateTime.ofInstant(start.plusSeconds(31 + 45), ZoneId.of("UTC")));
+    }
+
+    @Test
+    void theSameTokenIsRecordedOnceWithinASecond() {
+        var clock = new MutableClock(Instant.parse("2026-10-31T10:10:09.500Z"));
+        var timed = new JwtService(repository, properties, new ObjectMapper(), clock);
+        String token = timed.issueToken(7, "alice", true);
+        when(repository.existsByToken(token)).thenReturn(true);
+
+        // The requests a page fires in parallel sign to the same token within the same second: no second row, no shortened expiry
+        assertEquals(token, timed.issueToken(7, "alice", true));
+        verify(repository, org.mockito.Mockito.times(1)).save(any(WebSiteJwtToken.class));
+        properties.setJwtRefreshThresholdSeconds(60);
+        assertEquals(Optional.of(token), timed.refresh(new AuthenticatedUser(7, "alice", true, token)));
+        verify(repository, never()).shortenExpiry(any(), any());
+    }
+
+    @Test
+    void refreshThresholdAndGraceFollowTheConfiguration() {
+        assertEquals(30, service.refreshThresholdSeconds(), "half of the lifetime by default");
+        properties.setJwtRefreshThresholdSeconds(20);
+        assertEquals(20, service.refreshThresholdSeconds());
+        properties.setJwtRefreshThresholdSeconds(500);
+        assertEquals(60, service.refreshThresholdSeconds(), "never more than the lifetime");
+        properties.setJwtRefreshGraceSeconds(-5);
+        assertEquals(0, service.refreshGraceSeconds());
+        assertEquals(0, service.expiresAt("not.a.jwt"));
+        assertEquals(0, service.expiresAt(null));
+    }
+
+    /** A clock the tests move forward by hand */
+    private static final class MutableClock extends Clock {
+
+        private Instant now;
+
+        MutableClock(Instant now) {
+            this.now = now;
+        }
+
+        void advance(long seconds) {
+            now = now.plusSeconds(seconds);
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneId.of("UTC");
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
     }
 
     @Test

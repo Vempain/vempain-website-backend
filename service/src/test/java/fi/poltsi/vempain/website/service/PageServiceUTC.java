@@ -89,24 +89,60 @@ class PageServiceUTC {
 
     @Test
     void directoryTreeMarksLeavesAndNestsDirectories() {
-        List<WebSitePage> found = List.of(pageWithPath("docs/readme"), pageWithPath("docs/guide/intro"), pageWithPath("docs/guide/setup"));
+        List<WebSitePage> found = List.of(pageWithPath("docs/readme", "Read me first"), pageWithPath("docs/guide/intro", "Introduction"),
+                pageWithPath("docs/guide/setup", "  Setting up  "));
         when(pages.findByDirectoryForUser(1L, "docs/%")).thenReturn(found);
 
         List<DirectoryNodeResponse> tree = service.directoryTree("docs", 1);
 
         assertEquals(2, tree.size());
         DirectoryNodeResponse readme = tree.get(0);
-        assertEquals("readme", readme.getTitle());
+        assertEquals("Read me first", readme.getTitle());
+        assertEquals("readme", readme.getName());
         assertEquals("docs/readme", readme.getKey());
         assertTrue(readme.getIsLeaf());
         assertNull(readme.getChildren());
         DirectoryNodeResponse guide = tree.get(1);
         assertEquals("guide", guide.getKey());
+        assertEquals("guide", guide.getName());
+        assertEquals("guide", guide.getTitle(), "a directory without an index page is labelled by its segment");
         assertFalse(guide.getIsLeaf());
         assertEquals(List.of("docs/guide/intro", "docs/guide/setup"), guide.getChildren()
             .stream()
             .map(DirectoryNodeResponse::getKey)
             .toList());
+        assertEquals(List.of("Introduction", "Setting up"), guide.getChildren()
+            .stream()
+            .map(DirectoryNodeResponse::getTitle)
+            .toList());
+    }
+
+    @Test
+    void directoryTreeLabelsNodesWithPageHeaders() {
+        // The index page is listed after a sibling on purpose: the directory label must follow the index page whenever it turns up
+        List<WebSitePage> found = List.of(pageWithPath("docs/trips/2024", "Summer 2024"), pageWithPath("docs/trips/index", "All trips"),
+                pageWithPath("docs/blank", "   "), pageWithPath("docs/none", null), pageWithPath("docs/index", "Documentation"));
+        when(pages.findByDirectoryForUser(1L, "docs/%")).thenReturn(found);
+
+        List<DirectoryNodeResponse> tree = service.directoryTree("docs", 1);
+
+        assertEquals(List.of("trips", "blank", "none", "index"), tree.stream()
+            .map(DirectoryNodeResponse::getName)
+            .toList());
+        DirectoryNodeResponse trips = tree.get(0);
+        assertEquals("All trips", trips.getTitle(), "a directory shows the header of its index page");
+        assertEquals(List.of("Summer 2024", "All trips"), trips.getChildren()
+            .stream()
+            .map(DirectoryNodeResponse::getTitle)
+            .toList());
+        assertEquals("blank", tree.get(1)
+            .getTitle(), "a blank header falls back to the segment");
+        assertEquals("none", tree.get(2)
+            .getTitle(), "a missing header falls back to the segment");
+        assertEquals("Documentation", tree.get(3)
+            .getTitle(), "the index page of the requested directory itself is a plain leaf");
+        assertEquals("docs/index", tree.get(3)
+            .getKey());
     }
 
     @Test
@@ -122,8 +158,13 @@ class PageServiceUTC {
     }
 
     private WebSitePage pageWithPath(String path) {
+        return pageWithPath(path, null);
+    }
+
+    private WebSitePage pageWithPath(String path, String header) {
         WebSitePage page = mock(WebSitePage.class);
         when(page.getFilePath()).thenReturn(path);
+        when(page.getHeader()).thenReturn(header);
         when(page.getAclId()).thenReturn(null);
         return page;
     }
