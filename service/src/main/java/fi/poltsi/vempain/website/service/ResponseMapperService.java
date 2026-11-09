@@ -49,7 +49,7 @@ public class ResponseMapperService {
      * Full page response including the rendered body and the audit fields.
      */
     public WebSitePageResponse page(WebSitePage page) {
-        return pages(List.of(page)).get(0);
+        return pages(List.of(page)).getFirst();
     }
 
     /**
@@ -79,7 +79,7 @@ public class ResponseMapperService {
     }
 
     public WebSiteFileResponse file(WebSiteFile file) {
-        return files(List.of(file)).get(0);
+        return files(List.of(file)).getFirst();
     }
 
     public List<WebSiteFileResponse> files(List<WebSiteFile> files) {
@@ -119,7 +119,7 @@ public class ResponseMapperService {
     }
 
     public WebSiteGalleryResponse gallery(WebSiteGallery gallery) {
-        return galleries(List.of(gallery)).get(0);
+        return galleries(List.of(gallery)).getFirst();
     }
 
     public List<WebSiteGalleryResponse> galleries(List<WebSiteGallery> galleries) {

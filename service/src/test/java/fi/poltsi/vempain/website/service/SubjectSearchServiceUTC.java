@@ -87,18 +87,18 @@ class SubjectSearchServiceUTC {
 
         var pageResponse = response.getPages()
             .getContent()
-            .get(0);
+            .getFirst();
         assertEquals("Page", pageResponse.getTitle());
         assertEquals(11L, pageResponse.getPageId());
         assertNull(pageResponse.getBody(), "search results are summaries without body");
         assertEquals(List.of(), pageResponse.getSubjects());
         assertEquals("Gallery", response.getGalleries()
             .getContent()
-            .get(0)
+            .getFirst()
             .getShortname());
         var fileResponse = response.getFiles()
             .getContent()
-            .get(0);
+            .getFirst();
         assertEquals("file.jpg", fileResponse.getFilePath());
         assertEquals(5L, fileResponse.getLocationId());
         assertNull(fileResponse.getLocation(), "anonymous callers never receive GPS locations");

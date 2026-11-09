@@ -73,15 +73,15 @@ class ResponseMapperServiceUTC {
         assertEquals(2, response.getEmbeds()
             .size());
         assertEquals("gallery", response.getEmbeds()
-            .get(0)
+            .getFirst()
             .getType());
         assertEquals(12L, response.getEmbeds()
-            .get(0)
+            .getFirst()
             .getEmbedId());
         assertEquals("A", response.getEmbeds()
             .get(1)
             .getItems()
-            .get(0)
+            .getFirst()
             .getTitle());
         assertEquals(List.of(tag), response.getSubjects());
     }
@@ -107,7 +107,7 @@ class ResponseMapperServiceUTC {
         when(subjects.forPages(List.of(5L))).thenReturn(Map.of());
 
         WebSitePageResponse summary = mapper.pageSummaries(List.of(page))
-            .get(0);
+            .getFirst();
 
         assertEquals("Title", summary.getTitle());
         assertEquals("a/b", summary.getFilePath());
@@ -195,7 +195,7 @@ class ResponseMapperServiceUTC {
         when(subjects.forFiles(List.of(1L))).thenReturn(Map.of());
 
         assertNull(mapper.files(List.of(file))
-            .get(0)
+            .getFirst()
             .getLocation());
         verifyNoInteractions(locations);
     }
