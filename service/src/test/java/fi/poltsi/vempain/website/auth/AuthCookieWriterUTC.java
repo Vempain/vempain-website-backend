@@ -62,7 +62,7 @@ class AuthCookieWriterUTC {
 
         assertEquals("issued", response.getHeader("X-Auth-Token"));
         List<String> attributes = cookieAttributes(response);
-        assertEquals("SITE_JWT=issued", attributes.get(0));
+        assertEquals("SITE_JWT=issued", attributes.getFirst());
         assertTrue(attributes.containsAll(List.of("Path=/", "HttpOnly", "SameSite=Lax", "Max-Age=1200", "Secure")), attributes.toString());
     }
 
@@ -74,7 +74,7 @@ class AuthCookieWriterUTC {
         writer.write(response, "issued", 60L);
 
         List<String> attributes = cookieAttributes(response);
-        assertEquals("SITE_JWT=issued", attributes.get(0));
+        assertEquals("SITE_JWT=issued", attributes.getFirst());
         assertTrue(attributes.containsAll(List.of("Path=/", "HttpOnly", "SameSite=Lax", "Max-Age=60")), attributes.toString());
         assertFalse(attributes.contains("Secure"));
     }
@@ -87,7 +87,7 @@ class AuthCookieWriterUTC {
 
         assertNull(response.getHeader("X-Auth-Token"));
         List<String> attributes = cookieAttributes(response);
-        assertEquals("SITE_JWT=", attributes.get(0));
+        assertEquals("SITE_JWT=", attributes.getFirst());
         assertTrue(attributes.containsAll(List.of("Max-Age=0", "HttpOnly")), attributes.toString());
     }
 
@@ -98,7 +98,7 @@ class AuthCookieWriterUTC {
         List<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
         assertEquals(1, headers.size());
 
-        return Arrays.stream(headers.get(0)
+        return Arrays.stream(headers.getFirst()
             .split(";"))
             .map(String::trim)
             .toList();

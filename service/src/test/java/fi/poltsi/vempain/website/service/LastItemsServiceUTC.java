@@ -48,7 +48,7 @@ class LastItemsServiceUTC {
         assertEquals("pages", response.getType());
         assertEquals(50, response.getCount());
         var item = response.getItems()
-            .get(0);
+            .getFirst();
         assertEquals("<p>cache</p>", item.getBody());
         assertEquals("Header", item.getHeader());
         assertEquals("trips/summer", item.getFilePath());
@@ -71,9 +71,9 @@ class LastItemsServiceUTC {
         var items = service.latest("galleries", 0, -1L)
             .getItems();
 
-        assertEquals("Summer", items.get(0)
+        assertEquals("Summer", items.getFirst()
             .getTitle());
-        assertEquals(10L, items.get(0)
+        assertEquals(10L, items.getFirst()
             .getGalleryId());
         assertEquals("Gallery #20", items.get(1)
             .getTitle());
@@ -96,7 +96,7 @@ class LastItemsServiceUTC {
 
         var image = service.latest("images", 5, -1L)
             .getItems()
-            .get(0);
+            .getFirst();
 
         assertEquals("sunset.jpg", image.getTitle());
         assertEquals("images/trip/.thumb/sunset.jpg", image.getThumbnailPath());

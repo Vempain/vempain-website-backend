@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PublishedDataServiceITC {
 
     @Container
-    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine");
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18-alpine");
     static PublishedDataService service;
 
     @BeforeAll
@@ -64,7 +64,7 @@ class PublishedDataServiceITC {
         assertEquals("desc", result.getDirection());
         assertEquals("Jazz", result.getSearch());
         var row = result.getItems()
-            .get(0);
+            .getFirst();
         assertEquals(2L, row.getId());
         assertEquals("A Artist", row.getArtist());
         assertEquals(2021, row.getYear());
@@ -80,7 +80,7 @@ class PublishedDataServiceITC {
         assertFalse(result.isFirst());
         assertTrue(result.isLast());
         var row = result.getItems()
-            .get(0);
+            .getFirst();
         assertEquals("C Artist", row.getArtist());
         assertNull(row.getYear());
         assertNull(row.getDurationSeconds());
@@ -99,7 +99,7 @@ class PublishedDataServiceITC {
         assertEquals(1, track.getTotalPoints());
         assertEquals(1, track.getSampleStep());
         var point = track.getItems()
-            .get(0);
+            .getFirst();
         assertEquals(1L, point.getId());
         assertEquals(LocalDateTime.of(2024, 1, 1, 10, 0), point.getTimestamp());
         assertEquals(24.9, point.getLongitude(), .001);
@@ -112,7 +112,7 @@ class PublishedDataServiceITC {
             .isEmpty());
         assertEquals(overview.getBounds(), clusters.getBounds());
         var cluster = clusters.getItems()
-            .get(0);
+            .getFirst();
         assertTrue(cluster.getClusterKey()
             .startsWith("1:"));
         assertTrue(cluster.getCellBounds()
@@ -141,7 +141,7 @@ class PublishedDataServiceITC {
         assertEquals(1, points.getItems()
             .size());
         assertEquals("one.jpg", points.getItems()
-            .get(0)
+            .getFirst()
             .getFilename());
         assertThrows(IllegalArgumentException.class, () -> service.gpsClusterPoints("music", "bad", 1));
     }

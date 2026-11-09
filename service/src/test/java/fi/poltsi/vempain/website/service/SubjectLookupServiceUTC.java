@@ -49,7 +49,7 @@ class SubjectLookupServiceUTC {
         when(repository.findPageSubjectLinks(anyCollection())).thenReturn(List.of(first, second));
         when(repository.findByIdIn(anyCollection())).thenReturn(List.of(z, a));
         assertEquals("Alpha", service.forPage(8L)
-            .get(0)
+            .getFirst()
             .getSubject());
         assertEquals(2, service.forPages(List.of(8L, 8L))
             .get(8L)
@@ -79,7 +79,7 @@ class SubjectLookupServiceUTC {
         when(repository.findByIdIn(anyCollection())).thenReturn(List.of(sunset, unnamed));
 
         var fileSubject = service.forFile(3L)
-            .get(0);
+            .getFirst();
         assertEquals("sunset", fileSubject.getSubject());
         // The audit trail of the published subject (admin users by nick)
         assertEquals("alice", fileSubject.getCreator());
@@ -89,7 +89,7 @@ class SubjectLookupServiceUTC {
         assertEquals(List.of(3L), List.copyOf(service.forFiles(List.of(3L))
             .keySet()));
         assertNull(service.forGallery(4L)
-            .get(0)
+            .getFirst()
             .getSubject());
         assertEquals(1, service.forGalleries(List.of(4L))
             .get(4L)
@@ -122,7 +122,7 @@ class SubjectLookupServiceUTC {
         List<SubjectResponse> subjects = service.forPage(8L);
 
         assertEquals(2, subjects.size());
-        assertNull(subjects.get(0)
+        assertNull(subjects.getFirst()
             .getSubject());
         assertEquals("Alpha", subjects.get(1)
             .getSubject());

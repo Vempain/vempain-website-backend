@@ -29,7 +29,7 @@ class OpenApiConfigurationUTC {
         assertEquals(1, openAPI.getSecurity()
             .size());
         assertTrue(openAPI.getSecurity()
-            .get(0)
+            .getFirst()
             .containsKey("cookieAuth"));
     }
 }

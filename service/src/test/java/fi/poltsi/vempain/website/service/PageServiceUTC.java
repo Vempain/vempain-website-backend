@@ -62,7 +62,7 @@ class PageServiceUTC {
         assertEquals(1, result.getContent()
             .size());
         assertEquals(3L, result.getContent()
-            .get(0)
+            .getFirst()
             .getId());
         assertEquals(50, result.getSize());
         assertTrue(result.isLast());
@@ -80,10 +80,10 @@ class PageServiceUTC {
         when(pages.findTopLevelDirectories()).thenReturn(List.of("a"));
 
         assertEquals("<p>Child</p>", service.children(2L, -1L)
-            .get(0)
+            .getFirst()
             .getBody());
         assertEquals("a", service.directories()
-            .get(0)
+            .getFirst()
             .getName());
     }
 
@@ -96,7 +96,7 @@ class PageServiceUTC {
         List<DirectoryNodeResponse> tree = service.directoryTree("docs", 1);
 
         assertEquals(2, tree.size());
-        DirectoryNodeResponse readme = tree.get(0);
+        DirectoryNodeResponse readme = tree.getFirst();
         assertEquals("Read me first", readme.getTitle());
         assertEquals("readme", readme.getName());
         assertEquals("docs/readme", readme.getKey());
@@ -129,7 +129,7 @@ class PageServiceUTC {
         assertEquals(List.of("trips", "blank", "none", "index"), tree.stream()
             .map(DirectoryNodeResponse::getName)
             .toList());
-        DirectoryNodeResponse trips = tree.get(0);
+        DirectoryNodeResponse trips = tree.getFirst();
         assertEquals("All trips", trips.getTitle(), "a directory shows the header of its index page");
         assertEquals(List.of("Summer 2024", "All trips"), trips.getChildren()
             .stream()
